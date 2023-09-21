@@ -23,7 +23,7 @@ internal class RulesesBasedOutputCacheContext : IRulesBasedOutputCacheFeature
     internal DateTimeOffset? ResponseTime { get; set; }
     internal TimeSpan? ResponseExpirationTimeSpan { get; set; }
     internal TimeSpan CachedResponseValidFor { get; set; }
-    internal RulesBasedOutputCacheEntry CachedResponse { get; set; }
+    internal RulesBasedOutputCacheEntry? CachedResponse { get; set; }
     internal TimeSpan CachedEntryAge { get; set; }
     internal bool IsCacheEntryFresh { get; set; }
 }
