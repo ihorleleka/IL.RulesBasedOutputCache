@@ -14,18 +14,4 @@ public class RulesBasedOutputCacheConfiguration
     public long MaximumBodySize { get; set; } = 64 * 1024 * 1024;
 
     public List<CachingRule> CachingRules { get; set; } = new();
-
-    public List<CachingRule> ProcessedCachingRules()
-    {
-        _processedCachingRules ??= new Lazy<List<CachingRule>>(() =>
-        {
-            return CachingRules
-                .OrderBy(x => x.RuleAction)
-                .ThenBy(x => x.RuleType)
-                .ToList();
-        });
-        return _processedCachingRules.Value;
-    }
-
-    private Lazy<List<CachingRule>>? _processedCachingRules;
 }

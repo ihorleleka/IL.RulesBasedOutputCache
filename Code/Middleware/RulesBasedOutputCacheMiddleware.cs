@@ -4,6 +4,7 @@ using IL.RulesBasedOutputCache.Extensions;
 using IL.RulesBasedOutputCache.Helpers;
 using IL.RulesBasedOutputCache.Models;
 using IL.RulesBasedOutputCache.Models.Interfaces;
+using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Settings;
 using IL.RulesBasedOutputCache.StreamExt;
 using Microsoft.AspNetCore.Http;
@@ -22,19 +23,23 @@ public class RulesBasedOutputCacheMiddleware
     internal static int BodySegmentSize { get; set; } = 81920;
     private readonly RequestDelegate _next;
     private readonly IOutputCacheStore _store;
+    private readonly IRulesRepository _rulesRepository;
     private readonly RulesBasedOutputCacheConfiguration _cacheConfiguration;
 
     public RulesBasedOutputCacheMiddleware(
         RequestDelegate next,
         IOutputCacheStore store,
-        IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration)
+        IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration,
+        IRulesRepository rulesRepository)
     {
         ArgumentNullException.ThrowIfNull(next);
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(cacheConfiguration.Value);
+        ArgumentNullException.ThrowIfNull(rulesRepository);
 
         _next = next;
         _store = store;
+        _rulesRepository = rulesRepository;
         _cacheConfiguration = cacheConfiguration.Value;
     }
 
@@ -48,7 +53,7 @@ public class RulesBasedOutputCacheMiddleware
 
         var context = new RulesesBasedOutputCacheContext { HttpContext = httpContext };
         AddOutputCacheFeature(context);
-        FindMatchingCachingRuleAndSetVariables(context);
+        await FindMatchingCachingRuleAndSetVariables(context);
 
         if (!context.UseOutputCaching)
         {
@@ -87,9 +92,10 @@ public class RulesBasedOutputCacheMiddleware
         context.HttpContext.Features.Set<IRulesBasedOutputCacheFeature>(context);
     }
 
-    private void FindMatchingCachingRuleAndSetVariables(RulesesBasedOutputCacheContext context)
+    private async Task FindMatchingCachingRuleAndSetVariables(RulesesBasedOutputCacheContext context)
     {
-        var matchingRule = _cacheConfiguration.ProcessedCachingRules().FirstOrDefault(x => x.MatchesCurrentRequest(context.HttpContext));
+        var rules = await _rulesRepository.GetAll();
+        var matchingRule = rules.FirstOrDefault(x => x.MatchesCurrentRequest(context.HttpContext));
         if (matchingRule == null || matchingRule.RuleAction == RuleAction.Disallow)
         {
             return;

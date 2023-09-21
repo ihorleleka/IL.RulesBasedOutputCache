@@ -1,4 +1,6 @@
-﻿using IL.RulesBasedOutputCache.Settings;
+﻿using IL.RulesBasedOutputCache.Persistence.Rules;
+using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
+using IL.RulesBasedOutputCache.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +22,7 @@ public static class RulesBasedOutputCacheWebAppBuilderExtensions
             builder.Services.Configure(setupOptions ?? RulesBasedOutputCacheConfiguration.Default);
         }
         builder.Services.AddOutputCache();
+        builder.Services.AddSingleton<IRulesRepository, InMemoryRulesRepository>();
 
         return builder;
     }

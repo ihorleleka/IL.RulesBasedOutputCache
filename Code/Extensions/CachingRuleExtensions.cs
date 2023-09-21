@@ -27,4 +27,6 @@ internal static class CachingRuleExtensions
                 return false;
         }
     }
+
+    public static int GetPriority(this CachingRule rule) => (int)rule.RuleAction * 10 + (int)rule.RuleType;
 }
