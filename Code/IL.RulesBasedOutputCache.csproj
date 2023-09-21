@@ -18,6 +18,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="appsettings.schema.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="build\IL.RulesBasedOutputCache.targets">
+      <PackagePath>build</PackagePath>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="LICENSE.txt" Pack="true" Visible="false" PackagePath="" />
     <None Include="Readme.md" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
@@ -34,10 +43,5 @@
   <ItemGroup>
     <PackageReference Include="IL.Misc" Version="1.0.0" />
   </ItemGroup>
-
-  <Target Name="CopyAppsettingsTemplate" BeforeTargets="Build" Condition="!Exists('appsettings.schema.json')">
-    <Message Text="Copying appsettings.schema.template.json to appsettings.schema.json because it doesn't exist" Importance="high" />
-    <Copy SourceFiles="appsettings.schema.template.json" DestinationFiles="appsettings.schema.json" />
-  </Target>
 
 </Project>

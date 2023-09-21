@@ -150,11 +150,11 @@ public class RulesBasedOutputCacheMiddleware
                 // Add a content-length if required
                 if (!response.ContentLength.HasValue && StringValues.IsNullOrEmpty(response.Headers.TransferEncoding))
                 {
-                    context.CachedResponse.Headers ??= new HeaderDictionary();
+                    context.CachedResponse!.Headers ??= new HeaderDictionary();
                     context.CachedResponse.Headers.ContentLength = cachedResponseBody.Length;
                 }
 
-                context.CachedResponse.Body = cachedResponseBody;
+                context.CachedResponse!.Body = cachedResponseBody;
 
                 await RulesBasedOutputCacheEntrySerializer.StoreAsync(context.CacheKey,
                     context.CachedResponse,
@@ -330,7 +330,7 @@ public class RulesBasedOutputCacheMiddleware
 
     internal static bool ContentIsNotModified(RulesesBasedOutputCacheContext context)
     {
-        var cachedResponseHeaders = context.CachedResponse.Headers;
+        var cachedResponseHeaders = context.CachedResponse!.Headers;
         var ifNoneMatchHeader = context.HttpContext.Request.Headers.IfNoneMatch;
 
         if (!StringValues.IsNullOrEmpty(ifNoneMatchHeader))
