@@ -9,13 +9,11 @@ namespace IL.RulesBasedOutputCache.Extensions;
 
 public static class RulesBasedOutputCacheWebAppBuilderExtensions
 {
-    public const string ConfigurationSection = "RulesBasedOutputCache";
-
     public static WebApplicationBuilder AddRulesBasedOutputCache(this WebApplicationBuilder builder, Action<RulesBasedOutputCacheConfiguration>? setupOptions = null)
     {
-        if (builder.Configuration.GetSection(ConfigurationSection).Exists())
+        if (builder.Configuration.GetSection(Constants.Constants.ConfigurationSection).Exists())
         {
-            builder.Services.Configure<RulesBasedOutputCacheConfiguration>(builder.Configuration.GetSection(ConfigurationSection));
+            builder.Services.Configure<RulesBasedOutputCacheConfiguration>(builder.Configuration.GetSection(Constants.Constants.ConfigurationSection));
         }
         else
         {
