@@ -24,6 +24,14 @@ internal class InMemoryRulesRepository : IRulesRepository
         return Task.CompletedTask;
     }
 
+    public async Task AddRules(List<CachingRule> rules)
+    {
+        foreach (var cachingRule in rules)
+        {
+            await AddRule(cachingRule);
+        }
+    }
+
     public Task DeleteRuleById(Guid id)
     {
         if (_rules.FirstOrDefault(x => x.Id == id) is { } rule)
