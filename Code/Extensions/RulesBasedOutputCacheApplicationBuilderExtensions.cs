@@ -14,7 +14,7 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
         app.Use(async (context, next) =>
         {
             if (string.IsNullOrEmpty(context.Request.Path.Value)
-                || !context.Request.Path.Value.StartsWith(Constants.Constants.AdminPanelUrlBasePath, StringComparison.InvariantCultureIgnoreCase))
+                || !context.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}", StringComparison.InvariantCultureIgnoreCase))
             {
                 await next();
                 return;
@@ -23,7 +23,7 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
             var cacheConfig = context.RequestServices.GetRequiredService<IOptions<RulesBasedOutputCacheConfiguration>>();
             if (cacheConfig.Value.AutomatedCacheAdminPanelEnabled
                 && !string.IsNullOrEmpty(context.Request.Path.Value)
-                && context.Request.Path.Value.StartsWith(Constants.Constants.AdminPanelUrlBasePath, StringComparison.InvariantCultureIgnoreCase))
+                && context.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}", StringComparison.InvariantCultureIgnoreCase))
             {
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
                 return;
