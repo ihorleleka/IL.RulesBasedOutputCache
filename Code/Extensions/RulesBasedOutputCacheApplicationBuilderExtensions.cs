@@ -1,7 +1,10 @@
 ﻿using IL.RulesBasedOutputCache.Middleware;
+using IL.RulesBasedOutputCache.Persistence.Rules;
+using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -11,6 +14,14 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
 {
     public static IApplicationBuilder UseRulesBasedOutputCache(this IApplicationBuilder app)
     {
+        using (var scope = app.ApplicationServices.CreateScope())
+        {
+            var rulesRepo = scope.ServiceProvider.GetRequiredService<IRulesRepository>();
+            if (rulesRepo is RulesSqlRepository sqlRepository)
+            {
+                sqlRepository.Database.Migrate();
+            }
+        }
         app.Use(async (context, next) =>
         {
             if (string.IsNullOrEmpty(context.Request.Path.Value)
