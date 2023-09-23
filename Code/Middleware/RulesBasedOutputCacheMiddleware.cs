@@ -15,7 +15,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace IL.RulesBasedOutputCache.Middleware;
 
-public class RulesBasedOutputCacheMiddleware
+internal class RulesBasedOutputCacheMiddleware
 {
     // see https://tools.ietf.org/html/rfc7232#section-4.1
     private static readonly string[] HeadersToIncludeIn304 = { "Cache-Control", "Content-Location", "Date", "ETag", "Expires", "Vary" };
@@ -51,7 +51,7 @@ public class RulesBasedOutputCacheMiddleware
             return;
         }
 
-        var context = new RulesesBasedOutputCacheContext { HttpContext = httpContext };
+        var context = new RulesBasedOutputCacheContext { HttpContext = httpContext };
         AddOutputCacheFeature(context);
         await FindMatchingCachingRuleAndSetVariables(context);
 
@@ -82,17 +82,17 @@ public class RulesBasedOutputCacheMiddleware
         }
     }
 
-    internal static void AddOutputCacheFeature(RulesesBasedOutputCacheContext context)
+    internal static void AddOutputCacheFeature(RulesBasedOutputCacheContext context)
     {
         if (context.HttpContext.Features.Get<IRulesBasedOutputCacheFeature>() != null)
         {
-            throw new InvalidOperationException($"Another instance of {nameof(RulesesBasedOutputCacheContext)} already exists. Only one instance of {nameof(RulesesBasedOutputCacheContext)} can be configured for an application.");
+            throw new InvalidOperationException($"Another instance of {nameof(RulesBasedOutputCacheContext)} already exists. Only one instance of {nameof(RulesBasedOutputCacheContext)} can be configured for an application.");
         }
 
         context.HttpContext.Features.Set<IRulesBasedOutputCacheFeature>(context);
     }
 
-    private async Task FindMatchingCachingRuleAndSetVariables(RulesesBasedOutputCacheContext context)
+    private async Task FindMatchingCachingRuleAndSetVariables(RulesBasedOutputCacheContext context)
     {
         var rules = await _rulesRepository.GetAll();
         var matchingRule = rules.FirstOrDefault(x => x.MatchesCurrentRequest(context.HttpContext));
@@ -106,7 +106,7 @@ public class RulesBasedOutputCacheMiddleware
         context.UseOutputCaching = !string.IsNullOrEmpty(context.CacheKey);
     }
 
-    internal async Task<bool> TryServeFromCacheAsync(RulesesBasedOutputCacheContext cacheContext)
+    internal async Task<bool> TryServeFromCacheAsync(RulesBasedOutputCacheContext cacheContext)
     {
         var cacheEntry = await RulesBasedOutputCacheEntrySerializer.GetAsync(cacheContext.CacheKey, _store, cacheContext.HttpContext.RequestAborted);
 
@@ -124,7 +124,7 @@ public class RulesBasedOutputCacheMiddleware
         return false;
     }
 
-    internal void InterceptResponseStream(RulesesBasedOutputCacheContext context)
+    internal void InterceptResponseStream(RulesBasedOutputCacheContext context)
     {
         // Shim response stream
         context.OriginalResponseStream = context.HttpContext.Response.Body;
@@ -139,7 +139,7 @@ public class RulesBasedOutputCacheMiddleware
     /// <summary>
     /// Stores the response body
     /// </summary>
-    internal async ValueTask FinalizeCacheBodyAsync(RulesesBasedOutputCacheContext context)
+    internal async ValueTask FinalizeCacheBodyAsync(RulesBasedOutputCacheContext context)
     {
         //Add to cache only not empty 200 OK requests
         if (context.HttpContext.Response.StatusCode == StatusCodes.Status200OK
@@ -171,7 +171,7 @@ public class RulesBasedOutputCacheMiddleware
         }
     }
 
-    private static bool OnStartResponse(RulesesBasedOutputCacheContext context)
+    private static bool OnStartResponse(RulesBasedOutputCacheContext context)
     {
         if (!context.ResponseStarted)
         {
@@ -183,7 +183,7 @@ public class RulesBasedOutputCacheMiddleware
         return false;
     }
 
-    internal void StartResponse(RulesesBasedOutputCacheContext context)
+    internal void StartResponse(RulesBasedOutputCacheContext context)
     {
         if (OnStartResponse(context))
         {
@@ -191,7 +191,7 @@ public class RulesBasedOutputCacheMiddleware
         }
     }
 
-    internal void FinalizeCacheHeaders(RulesesBasedOutputCacheContext context)
+    internal void FinalizeCacheHeaders(RulesBasedOutputCacheContext context)
     {
         if (context.UseOutputCaching)
         {
@@ -203,6 +203,7 @@ public class RulesBasedOutputCacheMiddleware
             // Setting the date on the raw response headers.
             headers.Date = HeaderUtilities.FormatDate(context.ResponseTime!.Value);
 
+            context.Tags.Add(Constants.Constants.OutputCacheSharedTag);
             // Store the response on the state
             context.CachedResponse = new RulesBasedOutputCacheEntry
             {
@@ -227,7 +228,7 @@ public class RulesBasedOutputCacheMiddleware
         context.OutputCacheStream.DisableBuffering();
     }
 
-    internal static void RestoreResponseStream(RulesesBasedOutputCacheContext context)
+    internal static void RestoreResponseStream(RulesBasedOutputCacheContext context)
     {
         // Unshim response stream
         context.HttpContext.Response.Body = context.OriginalResponseStream;
@@ -236,7 +237,7 @@ public class RulesBasedOutputCacheMiddleware
         RemoveOutputCacheFeature(context.HttpContext);
     }
 
-    internal static async Task<bool> TryServeCachedResponseAsync(RulesesBasedOutputCacheContext context, RulesBasedOutputCacheEntry? cacheEntry)
+    internal static async Task<bool> TryServeCachedResponseAsync(RulesBasedOutputCacheContext context, RulesBasedOutputCacheEntry? cacheEntry)
     {
         if (cacheEntry == null)
         {
@@ -315,7 +316,7 @@ public class RulesBasedOutputCacheMiddleware
         return false;
     }
 
-    internal static void CreateCacheKey(RulesesBasedOutputCacheContext context, CachingRule matchingRule)
+    internal static void CreateCacheKey(RulesBasedOutputCacheContext context, CachingRule matchingRule)
     {
         if (!string.IsNullOrEmpty(context.CacheKey))
         {
@@ -334,7 +335,7 @@ public class RulesBasedOutputCacheMiddleware
 
     internal static void RemoveOutputCacheFeature(HttpContext context) => context.Features.Set<IRulesBasedOutputCacheFeature?>(null);
 
-    internal static bool ContentIsNotModified(RulesesBasedOutputCacheContext context)
+    internal static bool ContentIsNotModified(RulesBasedOutputCacheContext context)
     {
         var cachedResponseHeaders = context.CachedResponse!.Headers;
         var ifNoneMatchHeader = context.HttpContext.Request.Headers.IfNoneMatch;

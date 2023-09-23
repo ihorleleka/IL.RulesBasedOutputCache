@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.schema.json">
+    <Content Include="appsettings.outputcache.schema.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="build\IL.RulesBasedOutputCache.targets">
@@ -42,6 +42,10 @@
 
   <ItemGroup>
     <PackageReference Include="IL.Misc" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\OutputCache\" />
   </ItemGroup>
 
 </Project>

@@ -13,7 +13,7 @@ public class InMemoryRulesRepository : IRulesRepository
     public InMemoryRulesRepository(IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration)
     {
         _rules = new SortedSet<CachingRule>(cacheConfiguration.Value.CachingRules,
-            Comparer<CachingRule>.Create((a, b) => a.GetPriority().CompareTo(b.GetPriority())));
+            Comparer<CachingRule>.Create((a, b) => b.GetPriority().CompareTo(a.GetPriority())));
     }
 
     public Task<List<CachingRule>> GetAll() => Task.FromResult(_rules.ToList());

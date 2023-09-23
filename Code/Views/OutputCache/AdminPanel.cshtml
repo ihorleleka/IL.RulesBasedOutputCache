@@ -1,0 +1,183 @@
+@using IL.RulesBasedOutputCache.Models
+@model List<IL.RulesBasedOutputCache.Models.CachingRule>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel - Rules-Based Cache</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            background-color: #007bff;
+            color: #fff;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .new-rule-container {
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        }
+
+            .new-rule-container input,
+            .new-rule-container select,
+            .new-rule-container button,
+            .new-rule-container label {
+                margin: 5px 0;
+                padding: 10px;
+                -moz-box-sizing: border-box;
+                -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+            }
+
+        label {
+            display: block;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="checkbox"] {
+            margin-top: 8px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .center-button {
+            text-align: center;
+        }
+
+        .dangerous-link {
+            color: #ff0000;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+            .dangerous-link:hover {
+                color: #ff3333;
+            }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel - Rules-Based Cache</h1>
+    
+    <!-- Global cache invalidation -->
+    <div class="center-button">
+        <a href="/rulesBasedCache/EvictAllCacheEntries" target="_blank" class="dangerous-link">Evict All Cache Entries!</a>
+    </div>
+    <!-- Display existing rules -->
+    <h2>Existing Rules</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Rule Template</th>
+                <th>Rule Type</th>
+                <th>Rule Action</th>
+                <th>Vary By Query String</th>
+                <th>Response Expiration Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rule in Model)
+            {
+                <tr>
+                    <td>@rule.RuleTemplate</td>
+                    <td>@Enum.GetName(typeof(RuleType), rule.RuleType)</td>
+                    <td>@Enum.GetName(typeof(RuleAction), rule.RuleAction)</td>
+                    <td>@(rule.VaryByQueryString ? "Yes" : "No")</td>
+                    <td>@rule.ResponseExpirationTimeSpan</td>
+                    <td>
+                        <form method="post" action="/rulesBasedCache/deleteRule">
+                            <input type="hidden" name="ruleId" value="@rule.Id" />
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Add a new rule section -->
+    <div class="new-rule-container">
+        <h2>Add a New Rule</h2>
+        <form method="post" action="/rulesBasedCache/addRule">
+            <input type="hidden" name="ruleId" value="@Guid.NewGuid().ToString()" />
+            <label for="ruleTemplate">Rule Template:</label>
+            <input type="text" name="ruleTemplate" required />
+
+            <label for="ruleType">Rule Type:</label>
+            <select name="ruleType">
+                <option value="FileExtension">File Extension</option>
+                <option value="ExactPath">Exact Path</option>
+                <option value="Regex">Regex</option>
+            </select>
+
+            <label for="ruleAction">Rule Action:</label>
+            <select name="ruleAction">
+                <option value="Allow">Allow</option>
+                <option value="Disallow">Disallow</option>
+            </select>
+
+            <label for="varyByQueryString">Vary By Query String:</label>
+            <input type="checkbox" name="varyByQueryString" />
+
+            <label for="responseExpirationTimeSpan">Response Expiration Time (in TimeSpan format => "00:00:00"):</label>
+            <input type="text" name="responseExpirationTimeSpan" />
+            <div class="center-button">
+                <button type="submit">Add Rule</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

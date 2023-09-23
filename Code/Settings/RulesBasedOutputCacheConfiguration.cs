@@ -6,6 +6,15 @@ public class RulesBasedOutputCacheConfiguration
 {
     public static Action<RulesBasedOutputCacheConfiguration> Default = _ => { };
     public bool AutomatedCacheEnabled { get; set; } = false;
+
+    private bool _automatedCacheAdminPanelEnabled;
+
+    public bool AutomatedCacheAdminPanelEnabled
+    {
+        get => AutomatedCacheEnabled && _automatedCacheAdminPanelEnabled;
+        set => _automatedCacheAdminPanelEnabled = value;
+    }
+
     public required TimeSpan DefaultCacheTimeout { get; set; } = TimeSpan.FromMinutes(5);
 
     /// <summary>

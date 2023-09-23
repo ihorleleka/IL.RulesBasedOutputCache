@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace IL.RulesBasedOutputCache.Models;
 
-internal class RulesesBasedOutputCacheContext : IRulesBasedOutputCacheFeature
+internal class RulesBasedOutputCacheContext : IRulesBasedOutputCacheFeature
 {
     /// <summary>
     /// Determines whether the output caching logic should be configured for the incoming HTTP request.
