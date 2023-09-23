@@ -97,15 +97,20 @@
             text-align: center;
         }
 
-        .dangerous-link {
-            color: #ff0000;
-            font-weight: bold;
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ff3333; /* Red background color */
+            color: #fff; /* White text color */
             text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
         }
 
-            .dangerous-link:hover {
-                color: #ff3333;
-            }
+        /* Hover effect for the cache eviction link */
+        .button-link:hover {
+            background-color: #ff0000; /* Darker red background color on hover */
+        }
     </style>
 </head>
 <body>
@@ -113,7 +118,7 @@
     
     <!-- Global cache invalidation -->
     <div class="center-button">
-        <a href="/rulesBasedCache/EvictAllCacheEntries" target="_blank" class="dangerous-link">Evict All Cache Entries!</a>
+        <a href="/rulesBasedCache/EvictAllCacheEntries" target="_blank" class="button-link">Evict All Cache Entries!</a>
     </div>
     <!-- Display existing rules -->
     <h2>Existing Rules</h2>

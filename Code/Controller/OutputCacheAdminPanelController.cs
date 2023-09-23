@@ -37,7 +37,7 @@ public class OutputCacheAdminPanelController : Microsoft.AspNetCore.Mvc.Controll
     public async Task<IActionResult> EvictAllCacheEntries()
     {
         await _cacheStore.EvictByTagAsync(Constants.Constants.OutputCacheSharedTag, HttpContext.RequestAborted);
-        return Ok();
+        return Ok("All cache entries are evicted!");
     }
 
     [HttpPost]
