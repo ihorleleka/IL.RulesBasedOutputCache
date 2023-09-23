@@ -7,13 +7,13 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace IL.RulesBasedOutputCache.Persistence.Rules;
 
-internal class RulesSqlRepository : DbContext, IRulesRepository
+internal class SqlRulesRepository : DbContext, IRulesRepository
 {
     private const string CacheKey = "CachingRules";
     private readonly IMemoryCache _cache;
     private DbSet<CachingRule> CachingRules { get; set; }
 
-    public RulesSqlRepository(DbContextOptions<RulesSqlRepository> options, IMemoryCache memoryCache) : base(options)
+    public SqlRulesRepository(DbContextOptions<SqlRulesRepository> options, IMemoryCache memoryCache) : base(options)
     {
         _cache = memoryCache;
     }
@@ -25,11 +25,16 @@ internal class RulesSqlRepository : DbContext, IRulesRepository
 
     public async Task<List<CachingRule>> GetAll()
     {
+        if (_cache.TryGetValue(CacheKey, out List<CachingRule>? cachedRules) && cachedRules != null)
+        {
+            return cachedRules!;
+        }
+
         using (await LockManager.GetLockAsync(CacheKey))
         {
-            if (_cache.TryGetValue(CacheKey, out List<CachingRule>? cachedRules) && cachedRules != null)
+            if (_cache.TryGetValue(CacheKey, out List<CachingRule>? cachedRulesResolvedInAnotherThread) && cachedRules != null)
             {
-                return cachedRules!;
+                return cachedRulesResolvedInAnotherThread!;
             }
 
             var rules = await CachingRules.OrderByDescending(r => r.Priority).ToListAsync();

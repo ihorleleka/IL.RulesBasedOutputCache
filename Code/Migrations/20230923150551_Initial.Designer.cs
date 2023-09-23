@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace IL.RulesBasedOutputCache.Migrations
 {
-    [DbContext(typeof(RulesSqlRepository))]
+    [DbContext(typeof(SqlRulesRepository))]
     [Migration("20230923150551_Initial")]
     partial class Initial
     {

@@ -43,7 +43,7 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
     {
         using var scope = app.ApplicationServices.CreateScope();
         var rulesRepo = scope.ServiceProvider.GetRequiredService<IRulesRepository>();
-        if (rulesRepo is RulesSqlRepository sqlRepository)
+        if (rulesRepo is SqlRulesRepository sqlRepository)
         {
             sqlRepository.Database.Migrate();
         }

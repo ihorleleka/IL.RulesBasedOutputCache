@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace IL.RulesBasedOutputCache.Migrations
 {
-    [DbContext(typeof(RulesSqlRepository))]
+    [DbContext(typeof(SqlRulesRepository))]
     partial class RulesSqlRepositoryModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

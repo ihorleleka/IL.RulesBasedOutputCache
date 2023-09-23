@@ -20,8 +20,8 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
             var connectionStringName = section.Get<RulesBasedOutputCacheConfiguration>()?.SqlConnectionStringName;
             if (!string.IsNullOrEmpty(connectionStringName))
             {
-                services.AddDbContext<RulesSqlRepository>(options => options.UseSqlServer(config.GetConnectionString(connectionStringName)));
-                services.AddScoped<IRulesRepository, RulesSqlRepository>();
+                services.AddDbContext<SqlRulesRepository>(options => options.UseSqlServer(config.GetConnectionString(connectionStringName)));
+                services.AddScoped<IRulesRepository, SqlRulesRepository>();
             }
         }
         else
