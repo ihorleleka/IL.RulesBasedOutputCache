@@ -4,7 +4,7 @@
 
 # Setup
 
-## v5 startup files structure (Program.cs and Startup.cs)
+## v5 startup files structure (Program.cs and Startup.cs files)
 ```
 ConfigureServices(IServiceCollection services)
 services.AddRulesBasedOutputCache();
@@ -14,7 +14,7 @@ services.AddRulesBasedOutputCache();
 app.UseRulesBasedOutputCache();
 
 ```
-## v6+ startup files structure (Single Progam.cs files)
+## v6+ startup files structure (Single Progam.cs file)
 ```
 var builder = WebApplication.CreateBuilder(args);
 builder.AddRulesBasedOutputCache();
