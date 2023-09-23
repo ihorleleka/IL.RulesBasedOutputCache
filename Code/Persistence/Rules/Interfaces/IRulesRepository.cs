@@ -8,5 +8,7 @@ public interface IRulesRepository
 
     Task AddRule(CachingRule rule);
 
+    Task AddRules(List<CachingRule> rules);
+
     Task DeleteRuleById(Guid id);
 }

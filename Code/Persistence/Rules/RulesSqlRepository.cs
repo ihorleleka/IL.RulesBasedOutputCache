@@ -2,10 +2,8 @@
 using IL.RulesBasedOutputCache.Extensions;
 using IL.RulesBasedOutputCache.Models;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
-using IL.RulesBasedOutputCache.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 
 namespace IL.RulesBasedOutputCache.Persistence.Rules;
 
@@ -15,13 +13,9 @@ internal class RulesSqlRepository : DbContext, IRulesRepository
     private readonly IMemoryCache _cache;
     private DbSet<CachingRule> CachingRules { get; set; }
 
-    public RulesSqlRepository(DbContextOptions<RulesSqlRepository> options, IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration, IMemoryCache memoryCache) : base(options)
+    public RulesSqlRepository(DbContextOptions<RulesSqlRepository> options, IMemoryCache memoryCache) : base(options)
     {
         _cache = memoryCache;
-        if (!CachingRules.Any())
-        {
-            AddRules(cacheConfiguration.Value.CachingRules).Wait();
-        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

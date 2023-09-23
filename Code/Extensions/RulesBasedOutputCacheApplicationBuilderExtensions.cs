@@ -14,14 +14,7 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
 {
     public static IApplicationBuilder UseRulesBasedOutputCache(this IApplicationBuilder app)
     {
-        using (var scope = app.ApplicationServices.CreateScope())
-        {
-            var rulesRepo = scope.ServiceProvider.GetRequiredService<IRulesRepository>();
-            if (rulesRepo is RulesSqlRepository sqlRepository)
-            {
-                sqlRepository.Database.Migrate();
-            }
-        }
+        InitializeDatabase(app);
         app.Use(async (context, next) =>
         {
             if (string.IsNullOrEmpty(context.Request.Path.Value)
@@ -44,5 +37,21 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
         });
         app.UseMiddleware<RulesBasedOutputCacheMiddleware>();
         return app;
+    }
+
+    private static void InitializeDatabase(IApplicationBuilder app)
+    {
+        using var scope = app.ApplicationServices.CreateScope();
+        var rulesRepo = scope.ServiceProvider.GetRequiredService<IRulesRepository>();
+        if (rulesRepo is RulesSqlRepository sqlRepository)
+        {
+            sqlRepository.Database.Migrate();
+        }
+
+        var cacheConfig = scope.ServiceProvider.GetRequiredService<IOptions<RulesBasedOutputCacheConfiguration>>();
+        if (!rulesRepo.GetAll().Result.Any())
+        {
+            rulesRepo.AddRules(cacheConfig.Value.CachingRules).Wait();
+        }
     }
 }
