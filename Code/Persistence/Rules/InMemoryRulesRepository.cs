@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace IL.RulesBasedOutputCache.Persistence.Rules;
 
-public class InMemoryRulesRepository : IRulesRepository
+internal class InMemoryRulesRepository : IRulesRepository
 {
     private readonly SortedSet<CachingRule> _rules;
 

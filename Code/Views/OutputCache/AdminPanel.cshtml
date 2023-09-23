@@ -53,7 +53,7 @@
             border-radius: 5px;
             padding: 20px;
             margin: 20px auto;
-            max-width: 600px;
+            max-width: 900px;
             box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
         }
 
@@ -67,6 +67,35 @@
                 -webkit-box-sizing: border-box;
                 box-sizing: border-box;
             }
+
+            .new-rule-container h2 {
+                text-align: center;
+            }
+
+        .form-group {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: left;
+            margin: 5px 0;
+        }
+
+            .form-group label {
+                flex: 0 0 auto;
+                min-width: 15%;
+                font-weight: bold;
+            }
+
+            .form-group input,
+            .form-group select,
+            .form-group button {
+                flex: 1;
+                margin-left: 10px;
+            }
+
+                .form-group input[type="checkbox"] {
+                    flex: none;
+                }
 
         label {
             display: block;
@@ -108,18 +137,60 @@
             margin-top: 10px;
         }
 
-        /* Hover effect for the cache eviction link */
-        .button-link:hover {
-            background-color: #ff0000; /* Darker red background color on hover */
-        }
+            /* Hover effect for the cache eviction link */
+            .button-link:hover {
+                background-color: #ff0000; /* Darker red background color on hover */
+            }
     </style>
 </head>
 <body>
     <h1>Admin Panel - Rules-Based Cache</h1>
-    
+
     <!-- Global cache invalidation -->
     <div class="center-button">
         <a href="/rulesBasedCache/EvictAllCacheEntries" target="_blank" class="button-link">Evict All Cache Entries!</a>
+    </div>
+    <!-- Add a new rule section -->
+    <div class="new-rule-container">
+        <h2>Add a new rule</h2>
+        <form method="post" action="/rulesBasedCache/addRule">
+            <input type="hidden" name="ruleId" value="@Guid.NewGuid().ToString()" />
+            <div class="form-group">
+                <label for="ruleTemplate">Rule Template:</label>
+                <input type="text" name="ruleTemplate" placeholder="Example: /test, /* or .js" required />
+            </div>
+
+            <div class="form-group">
+                <label for="ruleType">Rule Type:</label>
+                <select name="ruleType">
+                    <option value="FileExtension">File Extension</option>
+                    <option value="ExactPath">Exact Path</option>
+                    <option value="Regex">Regex</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ruleAction">Rule Action:</label>
+                <select name="ruleAction">
+                    <option value="Allow">Allow</option>
+                    <option value="Disallow">Disallow</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="varyByQueryString">Vary By Query String:</label>
+                <input type="checkbox" name="varyByQueryString" />
+            </div>
+
+            <div class="form-group">
+                <label for="responseExpirationTimeSpan">Response Expiration Time:</label>
+                <input type="text" name="responseExpirationTimeSpan" placeholder="Use TimeSpan format => 00:00:00" />
+            </div>
+
+            <div class="center-button">
+                <button type="submit">Add Rule</button>
+            </div>
+        </form>
     </div>
     <!-- Display existing rules -->
     <h2>Existing Rules</h2>
@@ -153,37 +224,5 @@
             }
         </tbody>
     </table>
-
-    <!-- Add a new rule section -->
-    <div class="new-rule-container">
-        <h2>Add a New Rule</h2>
-        <form method="post" action="/rulesBasedCache/addRule">
-            <input type="hidden" name="ruleId" value="@Guid.NewGuid().ToString()" />
-            <label for="ruleTemplate">Rule Template:</label>
-            <input type="text" name="ruleTemplate" required />
-
-            <label for="ruleType">Rule Type:</label>
-            <select name="ruleType">
-                <option value="FileExtension">File Extension</option>
-                <option value="ExactPath">Exact Path</option>
-                <option value="Regex">Regex</option>
-            </select>
-
-            <label for="ruleAction">Rule Action:</label>
-            <select name="ruleAction">
-                <option value="Allow">Allow</option>
-                <option value="Disallow">Disallow</option>
-            </select>
-
-            <label for="varyByQueryString">Vary By Query String:</label>
-            <input type="checkbox" name="varyByQueryString" />
-
-            <label for="responseExpirationTimeSpan">Response Expiration Time (in TimeSpan format => "00:00:00"):</label>
-            <input type="text" name="responseExpirationTimeSpan" />
-            <div class="center-button">
-                <button type="submit">Add Rule</button>
-            </div>
-        </form>
-    </div>
 </body>
 </html>

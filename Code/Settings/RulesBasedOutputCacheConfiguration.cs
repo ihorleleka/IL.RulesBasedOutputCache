@@ -5,15 +5,9 @@ namespace IL.RulesBasedOutputCache.Settings;
 public class RulesBasedOutputCacheConfiguration
 {
     public static Action<RulesBasedOutputCacheConfiguration> Default = _ => { };
-    public bool AutomatedCacheEnabled { get; set; } = false;
+    public bool OutputCacheEnabled { get; set; } = false;
 
-    private bool _automatedCacheAdminPanelEnabled;
-
-    public bool AutomatedCacheAdminPanelEnabled
-    {
-        get => AutomatedCacheEnabled && _automatedCacheAdminPanelEnabled;
-        set => _automatedCacheAdminPanelEnabled = value;
-    }
+    public bool OutputCacheAdminPanelEnabled { get; set; }
 
     public required TimeSpan DefaultCacheTimeout { get; set; } = TimeSpan.FromMinutes(5);
 
@@ -23,4 +17,6 @@ public class RulesBasedOutputCacheConfiguration
     public long MaximumBodySize { get; set; } = 64 * 1024 * 1024;
 
     public List<CachingRule> CachingRules { get; set; } = new();
+
+    public string? SqlConnectionStringName { get; set; }
 }

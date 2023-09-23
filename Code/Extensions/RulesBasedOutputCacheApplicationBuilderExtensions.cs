@@ -21,7 +21,7 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
             }
 
             var cacheConfig = context.RequestServices.GetRequiredService<IOptions<RulesBasedOutputCacheConfiguration>>();
-            if (cacheConfig.Value.AutomatedCacheAdminPanelEnabled
+            if (!(cacheConfig.Value.OutputCacheEnabled && cacheConfig.Value.OutputCacheAdminPanelEnabled)
                 && !string.IsNullOrEmpty(context.Request.Path.Value)
                 && context.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}", StringComparison.InvariantCultureIgnoreCase))
             {

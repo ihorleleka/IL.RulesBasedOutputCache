@@ -9,6 +9,7 @@ using IL.RulesBasedOutputCache.Settings;
 using IL.RulesBasedOutputCache.StreamExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
@@ -23,29 +24,28 @@ internal class RulesBasedOutputCacheMiddleware
     internal static int BodySegmentSize { get; set; } = 81920;
     private readonly RequestDelegate _next;
     private readonly IOutputCacheStore _store;
-    private readonly IRulesRepository _rulesRepository;
+    private readonly IServiceProvider _serviceProvider;
     private readonly RulesBasedOutputCacheConfiguration _cacheConfiguration;
 
     public RulesBasedOutputCacheMiddleware(
         RequestDelegate next,
         IOutputCacheStore store,
-        IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration,
-        IRulesRepository rulesRepository)
+        IServiceProvider serviceProvider,
+        IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration)
     {
         ArgumentNullException.ThrowIfNull(next);
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(cacheConfiguration.Value);
-        ArgumentNullException.ThrowIfNull(rulesRepository);
 
         _next = next;
         _store = store;
-        _rulesRepository = rulesRepository;
+        _serviceProvider = serviceProvider;
         _cacheConfiguration = cacheConfiguration.Value;
     }
 
     public async Task Invoke(HttpContext httpContext)
     {
-        if (!_cacheConfiguration.AutomatedCacheEnabled)
+        if (!_cacheConfiguration.OutputCacheEnabled)
         {
             await _next(httpContext);
             return;
@@ -94,7 +94,13 @@ internal class RulesBasedOutputCacheMiddleware
 
     private async Task FindMatchingCachingRuleAndSetVariables(RulesBasedOutputCacheContext context)
     {
-        var rules = await _rulesRepository.GetAll();
+        List<CachingRule> rules;
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var rulesRepository = scope.ServiceProvider.GetRequiredService<IRulesRepository>();
+            rules = await rulesRepository.GetAll();
+        }
+
         var matchingRule = rules.FirstOrDefault(x => x.MatchesCurrentRequest(context.HttpContext));
         if (matchingRule == null || matchingRule.RuleAction == RuleAction.Disallow)
         {
