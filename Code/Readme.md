@@ -12,9 +12,10 @@ services.AddRulesBasedOutputCache();
 ...
 
 app.UseRulesBasedOutputCache();
-
 ```
+
 ## v6+ startup files structure (Single Progam.cs file)
+
 ```
 var builder = WebApplication.CreateBuilder(args);
 builder.AddRulesBasedOutputCache();
@@ -22,7 +23,24 @@ builder.AddRulesBasedOutputCache();
 ...
 var app = builder.Build();
 app.UseRulesBasedOutputCache();
+```
 
+## Tags management
+
+In order to tag cache entries there are few extension methods available (`IL.RulesBasedOutputCache.Helpers` namespace):
+- `void ApplyCustomCacheTagToCurrentRequest(this HttpContext context, string tag)`
+- `ApplyCustomCacheTagsToCurrentRequest(this HttpContext context, HashSet<string> tags)`
+
+which you can use to apply one or multiple tags to current request/potential cache entry.
+
+Tags can be used for cache invalidation.
+
+## Cache invalidation
+
+As library heavily relies on microsoft implementation of output cache you can use `IOutputCacheStore` for eviction of cached entries by their tags.
+
+```
+await _store.EvictByTagAsync("CacheTag", HttpContext.RequestAborted);
 ```
 
 ## Extra configurations
