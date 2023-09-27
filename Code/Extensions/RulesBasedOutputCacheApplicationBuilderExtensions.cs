@@ -12,6 +12,11 @@ namespace IL.RulesBasedOutputCache.Extensions;
 
 public static class RulesBasedOutputCacheApplicationBuilderExtensions
 {
+    /// <summary>
+    /// Adds a RulesBasedOutputCacheMiddleware type to the application's request pipeline. Requires .UseRouting() and .MapControllers() for correct functioning.
+    /// </summary>
+    /// <param name="app">The <see cref="IApplicationBuilder"/> instance.</param>
+    /// <returns>The <see cref="IApplicationBuilder"/> instance.</returns>
     public static IApplicationBuilder UseRulesBasedOutputCache(this IApplicationBuilder app)
     {
         InitializeDatabase(app);

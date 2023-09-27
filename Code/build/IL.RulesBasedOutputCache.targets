@@ -1,8 +1,8 @@
 <Project>
   <Target Name="CopyFiles" BeforeTargets="Build">
     <ItemGroup>
-      <File Include="$(MSBuildThisFileDirectory)..\contentFiles\**\*.json"></File>
+      <File Include="$(MSBuildThisFileDirectory)..\buildCopy\**\*.*"></File>
     </ItemGroup>
-    <Copy SourceFiles="@(File)" DestinationFolder="$(ProjectDir)"></Copy>
+    <Copy SourceFiles="@(File)" DestinationFiles="@(File->'$(ProjectDir)%(RecursiveDir)%(Filename)%(Extension)')"></Copy>
   </Target>
 </Project>

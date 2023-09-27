@@ -4,7 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageVersion>1.0.10</PackageVersion>
+    <PackageVersion>1.0.12</PackageVersion>
     <Title>RulesBasedOutputCache</Title>
     <Authors>Ihor Leleka</Authors>
     <Description>Rules based output cache.</Description>
@@ -18,24 +18,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Views\OutputCache\AdminPanel.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="appsettings.outputcache.schema.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="build\IL.RulesBasedOutputCache.targets">
-      <PackagePath>build</PackagePath>
-    </Content>
-    <Content Include="Views\OutputCache\AdminPanel.cshtml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="build\IL.RulesBasedOutputCache.targets" PackagePath="build" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="LICENSE.txt" Pack="true" Visible="false" PackagePath="" />
     <None Include="Readme.md" Pack="true" Visible="false" PackagePath="" />
+    <None Include="appsettings.outputcache.schema.json" Pack="true" Visible="false" PackagePath="buildCopy" />
+    <None Include="Views\OutputCache\AdminPanel.cshtml" Pack="true" Visible="false" PackagePath="buildCopy\Views\OutputCache" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,6 +42,10 @@
 
   <ItemGroup>
     <PackageReference Include="IL.Misc" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+   
   </ItemGroup>
 
 </Project>
