@@ -8,11 +8,11 @@ namespace IL.RulesBasedOutputCache.Persistence.Rules;
 
 internal class InMemoryRulesRepository : IRulesRepository
 {
-    private readonly SortedSet<CachingRule> _rules;
+    private static SortedSet<CachingRule>? _rules;
 
     public InMemoryRulesRepository(IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration)
     {
-        _rules = new SortedSet<CachingRule>(cacheConfiguration.Value.CachingRules,
+        _rules ??= new SortedSet<CachingRule>(cacheConfiguration.Value.CachingRules,
             Comparer<CachingRule>.Create((a, b) => b.GetPriority().CompareTo(a.GetPriority())));
     }
 
