@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using IL.Misc.Concurrency;
 using IL.RulesBasedOutputCache.Extensions;
 using IL.RulesBasedOutputCache.Helpers;
@@ -334,6 +335,18 @@ internal class RulesBasedOutputCacheMiddleware
         if (matchingRule.VaryByQueryString)
         {
             sb.Append(context.HttpContext.Request.QueryString.Value);
+        }
+        if (matchingRule.VaryByUser)
+        {
+            sb.Append(context.HttpContext.User.Identity?.Name ?? string.Empty);
+        }
+        if (matchingRule.VaryByHost)
+        {
+            sb.Append(context.HttpContext.Request.Host.Value);
+        }
+        if (matchingRule.VaryByCulture)
+        {
+            sb.Append(CultureInfo.CurrentCulture.TwoLetterISOLanguageName + CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
         }
 
         context.CacheKey = sb.ToString();

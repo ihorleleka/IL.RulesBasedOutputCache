@@ -7,6 +7,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace IL.RulesBasedOutputCache.Persistence.Rules;
 
+//Migration pattern: dotnet ef --startup-project ./Code/IL.RulesBasedOutputCache.csproj migrations add {MigrationName} --context SqlRulesRepository --output-dir Migrations --project ./Code/IL.RulesBasedOutputCache.csproj
 internal class SqlRulesRepository : DbContext, IRulesRepository
 {
     private const string CacheKey = "CachingRules";

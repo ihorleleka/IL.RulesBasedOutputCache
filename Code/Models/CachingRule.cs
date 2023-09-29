@@ -19,6 +19,9 @@ public record CachingRule
     [Required]
     public virtual int Priority { get; set; }
     public virtual bool VaryByQueryString { get; set; }
+    public virtual bool VaryByUser { get; set; }
+    public virtual bool VaryByHost { get; set; }
+    public virtual bool VaryByCulture { get; set; }
     public virtual TimeSpan? ResponseExpirationTimeSpan { get; set; }
 }
 

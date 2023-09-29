@@ -179,7 +179,22 @@
 
             <div class="form-group">
                 <label for="varyByQueryString">Vary By Query String:</label>
-                <input type="checkbox" name="varyByQueryString" />
+                <input type="checkbox" name="varyByQueryString" class="checkbox-toggle" />
+            </div>
+
+            <div class="form-group">
+                <label for="varyByUser">Vary By User:</label>
+                <input type="checkbox" name="varyByUser" class="checkbox-toggle" />
+            </div>
+
+            <div class="form-group">
+                <label for="varyByHost">Vary By Host:</label>
+                <input type="checkbox" name="varyByHost" class="checkbox-toggle" />
+            </div>
+
+            <div class="form-group">
+                <label for="varyByCulture">Vary By Culture:</label>
+                <input type="checkbox" name="varyByCulture" class="checkbox-toggle" />
             </div>
 
             <div class="form-group">
@@ -201,6 +216,9 @@
                 <th>Rule Type</th>
                 <th>Rule Action</th>
                 <th>Vary By Query String</th>
+                <th>Vary By User</th>
+                <th>Vary By Host</th>
+                <th>Vary By Culture</th>
                 <th>Response Expiration Time</th>
                 <th>Action</th>
             </tr>
@@ -213,6 +231,9 @@
                     <td>@Enum.GetName(typeof(RuleType), rule.RuleType)</td>
                     <td>@Enum.GetName(typeof(RuleAction), rule.RuleAction)</td>
                     <td>@(rule.VaryByQueryString ? "Yes" : "No")</td>
+                    <td>@(rule.VaryByUser ? "Yes" : "No")</td>
+                    <td>@(rule.VaryByHost ? "Yes" : "No")</td>
+                    <td>@(rule.VaryByCulture ? "Yes" : "No")</td>
                     <td>@rule.ResponseExpirationTimeSpan</td>
                     <td>
                         <form method="post" action="/rulesBasedCache/deleteRule">
@@ -224,5 +245,15 @@
             }
         </tbody>
     </table>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var checkboxes = document.querySelectorAll('.checkbox-toggle');
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('click', function () {
+                    checkbox.value = checkbox.checked ? "true" : "false";
+                });
+            });
+        });
+    </script>
 </body>
 </html>
