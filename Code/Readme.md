@@ -66,6 +66,9 @@ Library comes with [schema file](https://github.com/lelekaihor/IL.RulesBasedOutp
 - **RuleAction** - `Allow` or `Dissalow`
 - **RuleType** - `ExactPath`, `Regex` or `FileExtension`
 - **VaryByQueryString** - includes query string to cache key
+- **VaryByUser** - includes HttpContext.User.Identity.Name to cache key
+- **VaryByHost** - includes host string to cache key
+- **VaryByCulture** - includes both CultureInfo.CurrentCulture and CultureInfo.CurrentUICulture to cache key
 - **ResponseExpirationTimeSpan** - specific expiration time for rule. TimeSpan format ("00:00:00")
 
 ### Rules order
