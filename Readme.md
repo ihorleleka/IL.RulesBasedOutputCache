@@ -60,7 +60,7 @@ Library comes with [schema file](https://github.com/lelekaihor/IL.RulesBasedOutp
 - **SqlConnectionStringName** - optional string parameter, if provided will replace in-memory storage for rules with SQL based. You need to provide only the NAME of connection string, not the connection string itself. Database and/or required table will br created automatically, all the needed migrations will be automatically applied with new versions of library.
 - **OutputCacheAdminPanelEnabled** - enables Admin panel api and access to admin panel page, which is available by url `/rulesBasedCache/adminPanel`
 
-![image](https://github.com/lelekaihor/IL.RulesBasedOutputCache/assets/67684686/57d762a9-cce0-4cbe-a3e0-e135eca25153)
+![image](https://github.com/lelekaihor/IL.RulesBasedOutputCache/assets/67684686/4cbfb29e-3b1d-479b-a2ae-129b6146f54c)
 
 ### Caching rule parameters:
 
@@ -71,6 +71,9 @@ Library comes with [schema file](https://github.com/lelekaihor/IL.RulesBasedOutp
 - **RuleAction** - `Allow` or `Dissalow`
 - **RuleType** - `ExactPath`, `Regex` or `FileExtension`
 - **VaryByQueryString** - includes query string to cache key
+- **VaryByUser** - includes HttpContext.User.Identity.Name to cache key
+- **VaryByHost** - includes host string to cache key
+- **VaryByCulture** - includes both CultureInfo.CurrentCulture and CultureInfo.CurrentUICulture to cache key
 - **ResponseExpirationTimeSpan** - specific expiration time for rule. TimeSpan format ("00:00:00")
 
 ### Rules order
