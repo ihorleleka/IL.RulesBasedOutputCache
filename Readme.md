@@ -30,7 +30,7 @@ app.UseRulesBasedOutputCache();
 
 In order to tag cache entries there are few extension methods available (`IL.RulesBasedOutputCache.Helpers` namespace):
 - `void ApplyCustomCacheTagToCurrentRequest(this HttpContext context, string tag)`
-- `ApplyCustomCacheTagsToCurrentRequest(this HttpContext context, HashSet<string> tags)`
+- `void ApplyCustomCacheTagsToCurrentRequest(this HttpContext context, HashSet<string> tags)`
 
 which you can use to apply one or multiple tags to current request/potential cache entry.
 
