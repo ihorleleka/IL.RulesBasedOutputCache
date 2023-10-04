@@ -13,7 +13,12 @@ internal class InMemoryRulesRepository : IRulesRepository
     public InMemoryRulesRepository(IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration)
     {
         _rules ??= new SortedSet<CachingRule>(cacheConfiguration.Value.CachingRules,
-            Comparer<CachingRule>.Create((a, b) => b.GetPriority().CompareTo(a.GetPriority())));
+            Comparer<CachingRule>.Create((a, b) =>
+            {
+                var comparisonResult = b.GetPriority().CompareTo(a.GetPriority());
+                //if rules are of same priority compare them by template - prevents duplicates
+                return comparisonResult == 0 ? string.Compare(a.RuleTemplate, b.RuleTemplate, StringComparison.InvariantCultureIgnoreCase) : comparisonResult;
+            }));
     }
 
     public Task<List<CachingRule>> GetAll() => Task.FromResult(_rules!.ToList());

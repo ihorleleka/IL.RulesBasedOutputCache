@@ -61,6 +61,13 @@ internal class RulesBasedOutputCacheMiddleware
             await _next(context.HttpContext);
             return;
         }
+        //prevent admin panel from being cached
+        if (!string.IsNullOrEmpty(context.HttpContext.Request.Path.Value)
+            && context.HttpContext.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}"))
+        {
+            await _next(context.HttpContext);
+            return;
+        }
 
         try
         {

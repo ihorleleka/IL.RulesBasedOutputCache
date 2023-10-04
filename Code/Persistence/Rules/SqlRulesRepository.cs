@@ -50,6 +50,12 @@ internal class SqlRulesRepository : DbContext, IRulesRepository
 
     public async Task AddRule(CachingRule rule)
     {
+        //prevent from introducing duplicate entries
+        if (await CachingRules.AnyAsync(x => x.RuleTemplate == rule.RuleTemplate && x.Priority == rule.GetPriority()))
+        {
+            return;
+        }
+
         using (await LockManager.GetLockAsync(CacheKey))
         {
             rule.Priority = rule.GetPriority();
