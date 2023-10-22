@@ -2,7 +2,7 @@
 
 namespace IL.RulesBasedOutputCache.Models;
 
-internal class RulesBasedCacheCachedResponseBody
+internal sealed class RulesBasedCacheCachedResponseBody
 {
     internal RulesBasedCacheCachedResponseBody(List<byte[]> segments, long length)
     {

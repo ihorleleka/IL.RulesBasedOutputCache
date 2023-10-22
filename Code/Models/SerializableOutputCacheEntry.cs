@@ -1,6 +1,6 @@
 ﻿namespace IL.RulesBasedOutputCache.Models;
 
-internal class SerializableOutputCacheEntry
+internal sealed class SerializableOutputCacheEntry
 {
     internal DateTimeOffset Created { get; set; }
     internal int StatusCode { get; set; }

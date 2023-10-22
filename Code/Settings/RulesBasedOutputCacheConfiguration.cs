@@ -2,13 +2,12 @@
 
 namespace IL.RulesBasedOutputCache.Settings;
 
-public class RulesBasedOutputCacheConfiguration
+public sealed class RulesBasedOutputCacheConfiguration
 {
     public static Action<RulesBasedOutputCacheConfiguration> Default = _ => { };
     public bool OutputCacheEnabled { get; set; } = false;
-
-    public bool OutputCacheAdminPanelEnabled { get; set; }
-
+    public bool AdminPanelEnabled { get; set; }
+    public bool AdminPanelApiEnabled { get; set; }
     public required TimeSpan DefaultCacheTimeout { get; set; } = TimeSpan.FromMinutes(5);
 
     /// <summary>

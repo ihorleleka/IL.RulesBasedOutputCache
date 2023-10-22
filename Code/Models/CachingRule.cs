@@ -4,25 +4,62 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace IL.RulesBasedOutputCache.Models;
 
 [Table("CachingRules")]
-public record CachingRule
+public sealed record CachingRule : IValidatableObject
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public virtual Guid Id { get; } = Guid.NewGuid();
+    public Guid Id { get; } = Guid.NewGuid();
     [Required]
-    public virtual required string RuleTemplate { get; set; }
+    public required string RuleTemplate { get; set; }
     [Required]
-    public virtual required RuleType RuleType { get; set; }
+    public required RuleType RuleType { get; set; }
     [Required]
-    public virtual required RuleAction RuleAction { get; set; }
+    public required RuleAction RuleAction { get; set; }
 
     [Required]
-    public virtual int Priority { get; set; }
-    public virtual bool VaryByQueryString { get; set; }
-    public virtual bool VaryByUser { get; set; }
-    public virtual bool VaryByHost { get; set; }
-    public virtual bool VaryByCulture { get; set; }
-    public virtual TimeSpan? ResponseExpirationTimeSpan { get; set; }
+    public int Priority { get; set; }
+    public bool VaryByQueryString { get; set; }
+    public bool VaryByUser { get; set; }
+    public bool VaryByHost { get; set; }
+    public bool VaryByCulture { get; set; }
+    public TimeSpan? ResponseExpirationTimeSpan { get; set; }
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        var validationResults = new List<ValidationResult>();
+        if (string.IsNullOrEmpty(RuleTemplate))
+        {
+            validationResults.Add(new ValidationResult("RuleTemplate cannot be empty."));
+        }
+        switch (RuleType)
+        {
+            case RuleType.FileExtension:
+                var matchingExtensions = RuleTemplate.Split(Constants.Constants.MatchingExtensionsSeparator);
+                if (matchingExtensions.Any(x => string.IsNullOrEmpty(Path.GetExtension(x))))
+                {
+                    validationResults.Add(new ValidationResult($"RuleTemplate has invalid value for given RuleType: {Enum.GetName(RuleType)}."));
+                }
+                break;
+
+            case RuleType.ExactPath:
+                if (!RuleTemplate.StartsWith('/') && !RuleTemplate.Contains('*'))
+                {
+                    validationResults.Add(new ValidationResult($"RuleTemplate has invalid value for given RuleType: {Enum.GetName(RuleType)}."));
+                }
+                break;
+
+            case RuleType.Regex:
+                if (!(RuleTemplate.StartsWith("/") && RuleTemplate.Contains('*')))
+                {
+                    validationResults.Add(new ValidationResult($"RuleTemplate has invalid value for given RuleType: {Enum.GetName(RuleType)}."));
+                }
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        return validationResults;
+    }
 }
 
 public enum RuleType

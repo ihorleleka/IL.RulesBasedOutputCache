@@ -1,4 +1,5 @@
-﻿using IL.RulesBasedOutputCache.Middleware;
+﻿using System.ComponentModel.DataAnnotations;
+using IL.RulesBasedOutputCache.Middleware;
 using IL.RulesBasedOutputCache.Persistence.Rules;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Settings;
@@ -23,16 +24,18 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
         app.Use(async (context, next) =>
         {
             if (string.IsNullOrEmpty(context.Request.Path.Value)
-                || !context.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}", StringComparison.InvariantCultureIgnoreCase))
+                || !(context.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}", StringComparison.InvariantCultureIgnoreCase)
+                    || context.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelApiUrlBasePath}", StringComparison.InvariantCultureIgnoreCase)))
             {
                 await next();
                 return;
             }
 
             var cacheConfig = context.RequestServices.GetRequiredService<IOptions<RulesBasedOutputCacheConfiguration>>();
-            if (!(cacheConfig.Value.OutputCacheEnabled && cacheConfig.Value.OutputCacheAdminPanelEnabled)
+            if (!cacheConfig.Value.OutputCacheEnabled
                 && !string.IsNullOrEmpty(context.Request.Path.Value)
-                && context.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}", StringComparison.InvariantCultureIgnoreCase))
+                && ((!cacheConfig.Value.AdminPanelEnabled && context.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}", StringComparison.InvariantCultureIgnoreCase))
+                    || (!cacheConfig.Value.AdminPanelApiEnabled && context.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelApiUrlBasePath}", StringComparison.InvariantCultureIgnoreCase))))
             {
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
                 return;
@@ -56,7 +59,11 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
         var cacheConfig = scope.ServiceProvider.GetRequiredService<IOptions<RulesBasedOutputCacheConfiguration>>();
         if (!rulesRepo.GetAll().Result.Any())
         {
-            rulesRepo.AddRules(cacheConfig.Value.CachingRules).Wait();
+            var validationContext = new ValidationContext(rulesRepo);
+            var validRules = cacheConfig.Value.CachingRules
+                .Where(x => !x.Validate(validationContext).Any())
+                .ToList();
+            rulesRepo.AddRules(validRules).Wait();
         }
     }
 }

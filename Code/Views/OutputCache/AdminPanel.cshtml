@@ -148,12 +148,12 @@
 
     <!-- Global cache invalidation -->
     <div class="center-button">
-        <a href="/rulesBasedCache/EvictAllCacheEntries" target="_blank" class="button-link">Evict All Cache Entries!</a>
+        <a href="/api/rulesBasedCache/EvictAllCacheEntries" target="_blank" class="button-link">Evict All Cache Entries!</a>
     </div>
     <!-- Add a new rule section -->
     <div class="new-rule-container">
         <h2>Add a new rule</h2>
-        <form method="post" action="/rulesBasedCache/addRule">
+        <form method="post" action="/api/rulesBasedCache/addRule">
             <input type="hidden" name="ruleId" value="@Guid.NewGuid().ToString()" />
             <div class="form-group">
                 <label for="ruleTemplate">Rule Template:</label>
@@ -236,7 +236,7 @@
                     <td>@(rule.VaryByCulture ? "Yes" : "No")</td>
                     <td>@rule.ResponseExpirationTimeSpan</td>
                     <td>
-                        <form method="post" action="/rulesBasedCache/deleteRule">
+                        <form method="post" action="/api/rulesBasedCache/deleteRule">
                             <input type="hidden" name="ruleId" value="@rule.Id" />
                             <button type="submit">Delete</button>
                         </form>

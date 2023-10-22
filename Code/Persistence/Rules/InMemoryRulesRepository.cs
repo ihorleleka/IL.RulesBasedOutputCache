@@ -1,4 +1,5 @@
-﻿using IL.RulesBasedOutputCache.Extensions;
+﻿using System.ComponentModel.DataAnnotations;
+using IL.RulesBasedOutputCache.Extensions;
 using IL.RulesBasedOutputCache.Models;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Settings;
@@ -6,13 +7,16 @@ using Microsoft.Extensions.Options;
 
 namespace IL.RulesBasedOutputCache.Persistence.Rules;
 
-internal class InMemoryRulesRepository : IRulesRepository
+internal sealed class InMemoryRulesRepository : IRulesRepository
 {
     private static SortedSet<CachingRule>? _rules;
 
     public InMemoryRulesRepository(IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration)
     {
-        _rules ??= new SortedSet<CachingRule>(cacheConfiguration.Value.CachingRules,
+        var validationContext = new ValidationContext(this);
+        var validRules = cacheConfiguration.Value.CachingRules
+            .Where(x => !x.Validate(validationContext).Any());
+        _rules ??= new SortedSet<CachingRule>(validRules,
             Comparer<CachingRule>.Create((a, b) =>
             {
                 var comparisonResult = b.GetPriority().CompareTo(a.GetPriority());

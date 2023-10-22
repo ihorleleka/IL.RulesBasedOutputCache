@@ -17,7 +17,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace IL.RulesBasedOutputCache.Middleware;
 
-internal class RulesBasedOutputCacheMiddleware
+internal sealed class RulesBasedOutputCacheMiddleware
 {
     // see https://tools.ietf.org/html/rfc7232#section-4.1
     private static readonly string[] HeadersToIncludeIn304 = { "Cache-Control", "Content-Location", "Date", "ETag", "Expires", "Vary" };

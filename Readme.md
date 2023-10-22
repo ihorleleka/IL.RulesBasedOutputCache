@@ -67,7 +67,7 @@ Library comes with [schema file](https://github.com/lelekaihor/IL.RulesBasedOutp
 - **RuleTemplate** - template to be matched in order for rule to become active. **Examples**:
     - `/test` for `ExactPath` match rule
     - `/test/*` for `Regex` match rule
-    - `.js` for `FileExtension` match rule
+    - `.js` for `FileExtension` match rule. Also supports pipe separated list: '.js|.css|.html|.png'
 - **RuleAction** - `Allow` or `Dissalow`
 - **RuleType** - `ExactPath`, `Regex` or `FileExtension`
 - **VaryByQueryString** - includes query string to cache key

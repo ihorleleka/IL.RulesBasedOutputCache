@@ -2,7 +2,7 @@
 
 namespace IL.RulesBasedOutputCache.Models;
 
-internal class RulesBasedOutputCacheEntry
+internal sealed class RulesBasedOutputCacheEntry
 {
     /// <summary>
     /// Gets the created date and time of the cache entry.

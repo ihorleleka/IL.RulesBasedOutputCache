@@ -21,7 +21,8 @@ internal static class CachingRuleExtensions
             case RuleType.FileExtension:
                 {
                     var requestFileExtension = Path.GetExtension(httpContext.Request.Path.Value);
-                    return string.Equals(requestFileExtension, rule.RuleTemplate, StringComparison.InvariantCultureIgnoreCase);
+                    var matchingExtensions = rule.RuleTemplate.Split(Constants.Constants.MatchingExtensionsSeparator);
+                    return matchingExtensions.Any(x => string.Equals(requestFileExtension, x, StringComparison.InvariantCultureIgnoreCase));
                 }
             default:
                 return false;
