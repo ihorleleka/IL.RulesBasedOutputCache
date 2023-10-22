@@ -41,7 +41,7 @@ public sealed record CachingRule : IValidatableObject
                 break;
 
             case RuleType.ExactPath:
-                if (!RuleTemplate.StartsWith('/') && !RuleTemplate.Contains('*'))
+                if (!RuleTemplate.StartsWith('/') || RuleTemplate.Contains('*'))
                 {
                     validationResults.Add(new ValidationResult($"RuleTemplate has invalid value for given RuleType: {Enum.GetName(RuleType)}."));
                 }
