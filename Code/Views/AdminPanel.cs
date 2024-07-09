@@ -1,0 +1,271 @@
+using Il.ClassViewRendering.Attributes;
+using Il.ClassViewRendering.Interfaces;
+
+namespace IL.RulesBasedOutputCache.Views;
+
+[VirtualViewPath("/Views/OutputCache/AdminPanel.cshtml")]
+public class AdminPanel : IVirtualView
+{
+    public string ViewContent =>
+        """
+        @using IL.RulesBasedOutputCache.Models
+        @model List<IL.RulesBasedOutputCache.Models.CachingRule>
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Admin Panel - Rules-Based Cache</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f5f5f5;
+                }
+        
+                h1 {
+                    background-color: #007bff;
+                    color: #fff;
+                    padding: 20px;
+                    margin: 0;
+                }
+        
+                h2 {
+                    margin-top: 20px;
+                }
+        
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    background-color: #fff;
+                    border-radius: 5px;
+                    overflow: hidden;
+                }
+        
+                th, td {
+                    padding: 12px 15px;
+                    text-align: left;
+                    border-bottom: 1px solid #ddd;
+                }
+        
+                th {
+                    background-color: #007bff;
+                    color: #fff;
+                }
+        
+                tr:nth-child(even) {
+                    background-color: #f2f2f2;
+                }
+        
+                .new-rule-container {
+                    background-color: #f9f9f9;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                    padding: 20px;
+                    margin: 20px auto;
+                    max-width: 900px;
+                    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+                }
+        
+                    .new-rule-container input,
+                    .new-rule-container select,
+                    .new-rule-container button,
+                    .new-rule-container label {
+                        margin: 5px 0;
+                        padding: 10px;
+                        -moz-box-sizing: border-box;
+                        -webkit-box-sizing: border-box;
+                        box-sizing: border-box;
+                    }
+        
+                    .new-rule-container h2 {
+                        text-align: center;
+                    }
+        
+                .form-group {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    align-items: left;
+                    margin: 5px 0;
+                }
+        
+                    .form-group label {
+                        flex: 0 0 auto;
+                        min-width: 15%;
+                        font-weight: bold;
+                    }
+        
+                    .form-group input,
+                    .form-group select,
+                    .form-group button {
+                        flex: 1;
+                        margin-left: 10px;
+                    }
+        
+                        .form-group input[type="checkbox"] {
+                            flex: none;
+                        }
+        
+                label {
+                    display: block;
+                    font-weight: bold;
+                }
+        
+                input[type="text"],
+                input[type="number"],
+                select {
+                    width: 100%;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                }
+        
+                input[type="checkbox"] {
+                    margin-top: 8px;
+                }
+        
+                button {
+                    background-color: #007bff;
+                    color: #fff;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+        
+                .center-button {
+                    text-align: center;
+                }
+        
+                .button-link {
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background-color: #ff3333; /* Red background color */
+                    color: #fff; /* White text color */
+                    text-decoration: none;
+                    border-radius: 5px;
+                    transition: background-color 0.3s ease;
+                    margin-top: 10px;
+                }
+        
+                    /* Hover effect for the cache eviction link */
+                    .button-link:hover {
+                        background-color: #ff0000; /* Darker red background color on hover */
+                    }
+            </style>
+        </head>
+        <body>
+            <h1>Admin Panel - Rules-Based Cache</h1>
+        
+            <!-- Global cache invalidation -->
+            <div class="center-button">
+                <a href="/api/rulesBasedCache/EvictAllCacheEntries" target="_blank" class="button-link">Evict All Cache Entries!</a>
+            </div>
+            <!-- Add a new rule section -->
+            <div class="new-rule-container">
+                <h2>Add a new rule</h2>
+                <form method="post" action="/api/rulesBasedCache/addRule">
+                    <input type="hidden" name="ruleId" value="@Guid.NewGuid().ToString()" />
+                    <div class="form-group">
+                        <label for="ruleTemplate">Rule Template:</label>
+                        <input type="text" name="ruleTemplate" placeholder="Example: /test, /* or .js" required />
+                    </div>
+        
+                    <div class="form-group">
+                        <label for="ruleType">Rule Type:</label>
+                        <select name="ruleType">
+                            <option value="FileExtension">File Extension</option>
+                            <option value="ExactPath">Exact Path</option>
+                            <option value="Regex">Regex</option>
+                        </select>
+                    </div>
+        
+                    <div class="form-group">
+                        <label for="ruleAction">Rule Action:</label>
+                        <select name="ruleAction">
+                            <option value="Allow">Allow</option>
+                            <option value="Disallow">Disallow</option>
+                        </select>
+                    </div>
+        
+                    <div class="form-group">
+                        <label for="varyByQueryString">Vary By Query String:</label>
+                        <input type="checkbox" name="varyByQueryString" class="checkbox-toggle" />
+                    </div>
+        
+                    <div class="form-group">
+                        <label for="varyByUser">Vary By User:</label>
+                        <input type="checkbox" name="varyByUser" class="checkbox-toggle" />
+                    </div>
+        
+                    <div class="form-group">
+                        <label for="varyByHost">Vary By Host:</label>
+                        <input type="checkbox" name="varyByHost" class="checkbox-toggle" />
+                    </div>
+        
+                    <div class="form-group">
+                        <label for="varyByCulture">Vary By Culture:</label>
+                        <input type="checkbox" name="varyByCulture" class="checkbox-toggle" />
+                    </div>
+        
+                    <div class="form-group">
+                        <label for="responseExpirationTimeSpan">Response Expiration Time:</label>
+                        <input type="text" name="responseExpirationTimeSpan" placeholder="Use TimeSpan format => 00:00:00" />
+                    </div>
+        
+                    <div class="center-button">
+                        <button type="submit">Add Rule</button>
+                    </div>
+                </form>
+            </div>
+            <!-- Display existing rules -->
+            <h2>Existing Rules</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rule Template</th>
+                        <th>Rule Type</th>
+                        <th>Rule Action</th>
+                        <th>Vary By Query String</th>
+                        <th>Vary By User</th>
+                        <th>Vary By Host</th>
+                        <th>Vary By Culture</th>
+                        <th>Response Expiration Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rule in Model)
+                    {
+                        <tr>
+                            <td>@rule.RuleTemplate</td>
+                            <td>@Enum.GetName(typeof(RuleType), rule.RuleType)</td>
+                            <td>@Enum.GetName(typeof(RuleAction), rule.RuleAction)</td>
+                            <td>@(rule.VaryByQueryString ? "Yes" : "No")</td>
+                            <td>@(rule.VaryByUser ? "Yes" : "No")</td>
+                            <td>@(rule.VaryByHost ? "Yes" : "No")</td>
+                            <td>@(rule.VaryByCulture ? "Yes" : "No")</td>
+                            <td>@rule.ResponseExpirationTimeSpan</td>
+                            <td>
+                                <form method="post" action="/api/rulesBasedCache/deleteRule">
+                                    <input type="hidden" name="ruleId" value="@rule.Id" />
+                                    <button type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var checkboxes = document.querySelectorAll('.checkbox-toggle');
+                    checkboxes.forEach(function (checkbox) {
+                        checkbox.addEventListener('click', function () {
+                            checkbox.value = checkbox.checked ? "true" : "false";
+                        });
+                    });
+                });
+            </script>
+        </body>
+        </html>
+        """;
+}

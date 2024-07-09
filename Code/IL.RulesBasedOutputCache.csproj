@@ -4,7 +4,7 @@
     <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageVersion>1.0.19</PackageVersion>
+    <PackageVersion>1.1.0</PackageVersion>
     <Title>RulesBasedOutputCache</Title>
     <Authors>Ihor Leleka</Authors>
     <Description>Rules based output cache.</Description>
@@ -24,8 +24,7 @@
   <ItemGroup>
     <None Include="LICENSE.txt" Pack="true" Visible="false" PackagePath="" />
     <None Include="Readme.md" Pack="true" Visible="false" PackagePath="" />
-    <None Include="appsettings.outputcache.schema.json" Pack="true" Visible="false" PackagePath="buildCopy" />
-    <None Include="Views\OutputCache\AdminPanel.cshtml" Pack="true" Visible="false" PackagePath="buildCopy\Views\OutputCache" />
+    <None Include="outputcache.appsettings-schema.json" Pack="true" Visible="false" PackagePath="buildCopy" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,7 +48,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="IL.Misc" Version="1.1.0" />
+    <PackageReference Include="IL.VirtualViews" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup>

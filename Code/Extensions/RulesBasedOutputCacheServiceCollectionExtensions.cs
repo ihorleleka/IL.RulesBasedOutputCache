@@ -1,4 +1,6 @@
-﻿using IL.RulesBasedOutputCache.Persistence.Rules;
+﻿using Il.ClassViewRendering.Extensions;
+using IL.RulesBasedOutputCache.Models;
+using IL.RulesBasedOutputCache.Persistence.Rules;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +12,8 @@ namespace IL.RulesBasedOutputCache.Extensions;
 public static class RulesBasedOutputCacheServiceCollectionExtensions
 {
     /// <inheritdoc cref="RulesBasedOutputCacheWebAppBuilderExtensions.AddRulesBasedOutputCache" />
-    public static IServiceCollection AddRulesBasedOutputCache(this IServiceCollection services, IConfiguration config, Action<RulesBasedOutputCacheConfiguration>? setupOptions = null)
+    public static IServiceCollection AddRulesBasedOutputCache(this IServiceCollection services, IConfiguration config,
+        Action<RulesBasedOutputCacheConfiguration>? setupOptions = null)
     {
         services.AddOutputCache();
         services.AddMemoryCache();
@@ -19,16 +22,39 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
         if (section.Exists())
         {
             services.Configure<RulesBasedOutputCacheConfiguration>(section);
-            var connectionStringName = section.Get<RulesBasedOutputCacheConfiguration>()?.SqlConnectionStringName;
-            if (!string.IsNullOrEmpty(connectionStringName))
+            var rulesBasedAppInsightsConfiguration = section.Get<RulesBasedOutputCacheConfiguration>();
+            if (!string.IsNullOrEmpty(rulesBasedAppInsightsConfiguration?.SqlConnectionStringName))
             {
-                services.AddDbContext<SqlRulesRepository>(options => options.UseSqlServer(config.GetConnectionString(connectionStringName)));
+                services.AddDbContext<SqlRulesRepository>(options => options.UseSqlServer(config.GetConnectionString(rulesBasedAppInsightsConfiguration.SqlConnectionStringName)));
                 services.AddScoped<IRulesRepository, SqlRulesRepository>();
+            }
+
+            if (rulesBasedAppInsightsConfiguration is { AdminPanelEnabled: true })
+            {
+                services.AddVirtualViewsCapabilities();
             }
         }
         else
         {
             services.Configure(setupOptions ?? RulesBasedOutputCacheConfiguration.Default);
+            if (setupOptions != default)
+            {
+                var configuration = new RulesBasedOutputCacheConfiguration
+                {
+                    OutputCacheEnabled = false,
+                    AdminPanelEnabled = false,
+                    AdminPanelApiEnabled = false,
+                    DefaultCacheTimeout = default,
+                    MaximumBodySize = 0,
+                    CachingRules = new List<CachingRule>(),
+                    SqlConnectionStringName = null
+                };
+                setupOptions(configuration);
+                if (configuration.AdminPanelEnabled)
+                {
+                    services.AddVirtualViewsCapabilities();
+                }
+            }
         }
 
         return services;
