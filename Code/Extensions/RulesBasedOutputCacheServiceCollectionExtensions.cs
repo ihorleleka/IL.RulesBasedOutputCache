@@ -1,8 +1,8 @@
-﻿using Il.ClassViewRendering.Extensions;
-using IL.RulesBasedOutputCache.Models;
+﻿using IL.RulesBasedOutputCache.Models;
 using IL.RulesBasedOutputCache.Persistence.Rules;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Settings;
+using IL.VirtualViews.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

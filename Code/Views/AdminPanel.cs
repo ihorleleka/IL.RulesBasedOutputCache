@@ -1,5 +1,5 @@
-using Il.ClassViewRendering.Attributes;
-using Il.ClassViewRendering.Interfaces;
+using IL.VirtualViews.Attributes;
+using IL.VirtualViews.Interfaces;
 
 namespace IL.RulesBasedOutputCache.Views;
 
