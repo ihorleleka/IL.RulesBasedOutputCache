@@ -23,6 +23,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
     private static readonly string[] HeadersToIncludeIn304 = { "Cache-Control", "Content-Location", "Date", "ETag", "Expires", "Vary" };
 
     internal static int BodySegmentSize { get; set; } = 81920;
+
     private readonly RequestDelegate _next;
     private readonly IOutputCacheStore _store;
     private readonly IServiceProvider _serviceProvider;
@@ -61,6 +62,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
             await _next(context.HttpContext);
             return;
         }
+
         //prevent admin panel from being cached
         if (!string.IsNullOrEmpty(context.HttpContext.Request.Path.Value)
             && context.HttpContext.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}"))
@@ -80,7 +82,15 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
                 InterceptResponseStream(context);
                 await _next(httpContext);
-                await FinalizeCacheBodyAsync(context);
+                try
+                {
+                    await FinalizeCacheBodyAsync(context);
+                }
+                catch
+                {
+                    //ignore
+                }
+
                 RestoreResponseStream(context);
             }
         }
@@ -94,7 +104,8 @@ internal sealed class RulesBasedOutputCacheMiddleware
     {
         if (context.HttpContext.Features.Get<IRulesBasedOutputCacheFeature>() != null)
         {
-            throw new InvalidOperationException($"Another instance of {nameof(RulesBasedOutputCacheContext)} already exists. Only one instance of {nameof(RulesBasedOutputCacheContext)} can be configured for an application.");
+            throw new InvalidOperationException(
+                $"Another instance of {nameof(RulesBasedOutputCacheContext)} already exists. Only one instance of {nameof(RulesBasedOutputCacheContext)} can be configured for an application.");
         }
 
         context.HttpContext.Features.Set<IRulesBasedOutputCacheFeature>(context);
@@ -194,6 +205,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
             return true;
         }
+
         return false;
     }
 
@@ -324,6 +336,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
                     }
                 }
             }
+
             return true;
         }
 
@@ -343,14 +356,17 @@ internal sealed class RulesBasedOutputCacheMiddleware
         {
             sb.Append(context.HttpContext.Request.QueryString.Value);
         }
+
         if (matchingRule.VaryByUser)
         {
             sb.Append(context.HttpContext.User.Identity?.Name ?? string.Empty);
         }
+
         if (matchingRule.VaryByHost)
         {
             sb.Append(context.HttpContext.Request.Host.Value);
         }
+
         if (matchingRule.VaryByCulture)
         {
             sb.Append(CultureInfo.CurrentCulture.TwoLetterISOLanguageName + CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
@@ -374,8 +390,8 @@ internal sealed class RulesBasedOutputCacheMiddleware
             }
 
             if (cachedResponseHeaders != null && !StringValues.IsNullOrEmpty(cachedResponseHeaders[HeaderNames.ETag])
-                && EntityTagHeaderValue.TryParse(cachedResponseHeaders[HeaderNames.ETag].ToString(), out var eTag)
-                && EntityTagHeaderValue.TryParseList(ifNoneMatchHeader, out var ifNoneMatchETags))
+                                              && EntityTagHeaderValue.TryParse(cachedResponseHeaders[HeaderNames.ETag].ToString(), out var eTag)
+                                              && EntityTagHeaderValue.TryParseList(ifNoneMatchHeader, out var ifNoneMatchETags))
             {
                 for (var i = 0; i < ifNoneMatchETags?.Count; i++)
                 {

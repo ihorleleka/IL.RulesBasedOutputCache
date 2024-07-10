@@ -4,7 +4,7 @@
     <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageVersion>1.1.1</PackageVersion>
+    <PackageVersion>1.1.2</PackageVersion>
     <Title>RulesBasedOutputCache</Title>
     <Authors>Ihor Leleka</Authors>
     <Description>Rules based output cache.</Description>
