@@ -25,7 +25,12 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
             var rulesBasedAppInsightsConfiguration = section.Get<RulesBasedOutputCacheConfiguration>();
             if (!string.IsNullOrEmpty(rulesBasedAppInsightsConfiguration?.SqlConnectionStringName))
             {
-                services.AddDbContext<SqlRulesRepository>(options => options.UseSqlServer(config.GetConnectionString(rulesBasedAppInsightsConfiguration.SqlConnectionStringName)));
+                services.AddDbContext<SqlRulesRepository>(options => options
+                    .UseSqlServer(config
+                            .GetConnectionString(rulesBasedAppInsightsConfiguration.SqlConnectionStringName),
+                        sqlServerOptions => sqlServerOptions.MigrationsHistoryTable("__RulesBasedOutputCacheMigrations")
+                    )
+                );
                 services.AddScoped<IRulesRepository, SqlRulesRepository>();
             }
 
