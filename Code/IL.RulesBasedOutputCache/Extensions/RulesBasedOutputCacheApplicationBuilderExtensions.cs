@@ -5,6 +5,7 @@ using IL.RulesBasedOutputCache.Persistence.Rules;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Settings;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -13,12 +14,24 @@ namespace IL.RulesBasedOutputCache.Extensions;
 
 public static class RulesBasedOutputCacheApplicationBuilderExtensions
 {
-    public static WebApplication UseRulesBasedOutputCache(this WebApplication app)
+    public static WebApplication UseRulesBasedOutputCache(this WebApplication app,
+        Action<RouteHandlerBuilder>? configureAdminPanelEndpoint = default,
+        Action<RouteGroupBuilder>? configureAdminPanelApiEndpoints = default)
     {
         InitializeDatabase(app);
         var options = app.Services.GetRequiredService<IOptions<RulesBasedOutputCacheConfiguration>>().Value;
-        app.MapAdminPanelEndpoints(options);
-        app.MapAdminPanelApiEndpoints(options);
+        if (options.AdminPanel.AdminPanelEnabled)
+        {
+            var adminPanelEndpoint = app.MapAdminPanelEndpoints(options);
+            configureAdminPanelEndpoint?.Invoke(adminPanelEndpoint);
+        }
+
+        if (options.AdminPanel.AdminPanelApiEnabled)
+        {
+            var adminPanelApiEndpoint = app.MapAdminPanelApiEndpoints(options);
+            configureAdminPanelApiEndpoints?.Invoke(adminPanelApiEndpoint);
+        }
+
         app.UseMiddleware<RulesBasedOutputCacheMiddleware>();
         return app;
     }

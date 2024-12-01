@@ -6,18 +6,15 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 
 namespace IL.RulesBasedOutputCache.MinimalApi;
 
 public static class AdminPanelApiEndpoints
 {
-    public static WebApplication MapAdminPanelApiEndpoints(this WebApplication app, RulesBasedOutputCacheConfiguration options)
+    public static RouteGroupBuilder MapAdminPanelApiEndpoints(this WebApplication app, RulesBasedOutputCacheConfiguration options)
     {
-        if (options.AdminPanel.AdminPanelApiEnabled is false)
-        {
-            return app;
-        }
 
         var apiGroping = app
             .MapGroup(Constants.Constants.AdminPanelApiUrlBasePath)
@@ -57,6 +54,6 @@ public static class AdminPanelApiEndpoints
                 return Results.Redirect(outputCacheOptions.Value.AdminPanel.AdminPanelUrl);
             });
 
-        return app;
+        return apiGroping;
     }
 }
