@@ -39,12 +39,9 @@ internal static class RulesBasedOutputCacheEntrySerializer
             Body = new RulesBasedCacheCachedResponseBody(formatter.Body, formatter.Body.Sum(x => x.Length))
         };
 
-        if (formatter.Headers != null)
+        foreach (var header in formatter.Headers)
         {
-            foreach (var header in formatter.Headers)
-            {
-                outputCacheEntry.Headers.TryAdd(header.Key, header.Value);
-            }
+            outputCacheEntry.Headers.TryAdd(header.Key, header.Value);
         }
 
         return outputCacheEntry;
@@ -66,7 +63,7 @@ internal static class RulesBasedOutputCacheEntrySerializer
 
         if (value.Headers != null)
         {
-            formatterEntry.Headers = new();
+            formatterEntry.Headers = new Dictionary<string, string?[]>();
             foreach (var header in value.Headers)
             {
                 formatterEntry.Headers.TryAdd(header.Key, header.Value.ToArray());
@@ -77,7 +74,7 @@ internal static class RulesBasedOutputCacheEntrySerializer
 
         Serialize(bufferStream, formatterEntry);
 
-        await store.SetAsync(key, bufferStream.ToArray(), value.Tags ?? Array.Empty<string>(), duration, cancellationToken);
+        await store.SetAsync(key, bufferStream.ToArray(), value.Tags, duration, cancellationToken);
     }
 
     // Format:
@@ -142,15 +139,7 @@ internal static class RulesBasedOutputCacheEntrySerializer
 
             //     Values count: 7-bit encoded int
 
-            if (header.Value == null)
-            {
-                writer.Write7BitEncodedInt(0);
-                continue;
-            }
-            else
-            {
-                writer.Write7BitEncodedInt(header.Value.Length);
-            }
+            writer.Write7BitEncodedInt(header.Value.Length);
 
             //     For each header value:
             //       data byte length: 7-bit encoded int
@@ -186,7 +175,7 @@ internal static class RulesBasedOutputCacheEntrySerializer
 
         foreach (var tag in entry.Tags)
         {
-            writer.Write(tag ?? "");
+            writer.Write(tag);
         }
     }
 

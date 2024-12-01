@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{C903F9D1-118B-4143-B32D-A14BA53BB4DA}") = "IL.RulesBasedOutputCache", "Code\IL.RulesBasedOutputCache.csproj", "{3A86108C-9148-4CC8-9AF7-9849269B1E12}"
+Project("{C903F9D1-118B-4143-B32D-A14BA53BB4DA}") = "IL.RulesBasedOutputCache", "Code\IL.RulesBasedOutputCache\IL.RulesBasedOutputCache.csproj", "{3A86108C-9148-4CC8-9AF7-9849269B1E12}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

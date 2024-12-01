@@ -20,7 +20,7 @@ public static class HttpContextExtensions
             outputCacheFeature.Tags.UnionWith(tags);
         }
     }
-    
+
     public static void IgnoreRulesBasedOutputCacheForCurrentRequest(this HttpContext context)
     {
         if (context.Features.Get<IRulesBasedOutputCacheFeature>() is { } outputCacheFeature)

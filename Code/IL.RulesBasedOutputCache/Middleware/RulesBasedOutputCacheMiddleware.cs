@@ -20,9 +20,9 @@ namespace IL.RulesBasedOutputCache.Middleware;
 internal sealed class RulesBasedOutputCacheMiddleware
 {
     // see https://tools.ietf.org/html/rfc7232#section-4.1
-    private static readonly string[] HeadersToIncludeIn304 = { "Cache-Control", "Content-Location", "Date", "ETag", "Expires", "Vary" };
+    private static readonly string[] HeadersToIncludeIn304 = ["Cache-Control", "Content-Location", "Date", "ETag", "Expires", "Vary"];
 
-    internal static int BodySegmentSize { get; set; } = 81920;
+    private static int BodySegmentSize { get; set; } = 81920;
 
     private readonly RequestDelegate _next;
     private readonly IOutputCacheStore _store;
@@ -65,7 +65,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
         //prevent admin panel from being cached
         if (!string.IsNullOrEmpty(context.HttpContext.Request.Path.Value)
-            && context.HttpContext.Request.Path.Value.StartsWith($"/{Constants.Constants.AdminPanelUrlBasePath}"))
+            && context.HttpContext.Request.Path.Value.StartsWith(_cacheConfiguration.AdminPanel.AdminPanelUrl))
         {
             await _next(context.HttpContext);
             return;
@@ -100,7 +100,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
         }
     }
 
-    internal static void AddOutputCacheFeature(RulesBasedOutputCacheContext context)
+    private static void AddOutputCacheFeature(RulesBasedOutputCacheContext context)
     {
         if (context.HttpContext.Features.Get<IRulesBasedOutputCacheFeature>() != null)
         {
@@ -131,7 +131,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
         context.UseOutputCaching = !string.IsNullOrEmpty(context.CacheKey);
     }
 
-    internal async Task<bool> TryServeFromCacheAsync(RulesBasedOutputCacheContext cacheContext)
+    private async Task<bool> TryServeFromCacheAsync(RulesBasedOutputCacheContext cacheContext)
     {
         var cacheEntry = await RulesBasedOutputCacheEntrySerializer.GetAsync(cacheContext.CacheKey, _store, cacheContext.HttpContext.RequestAborted);
 
@@ -149,7 +149,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
         return false;
     }
 
-    internal void InterceptResponseStream(RulesBasedOutputCacheContext context)
+    private void InterceptResponseStream(RulesBasedOutputCacheContext context)
     {
         // Shim response stream
         context.OriginalResponseStream = context.HttpContext.Response.Body;
@@ -164,7 +164,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
     /// <summary>
     /// Stores the response body
     /// </summary>
-    internal async ValueTask FinalizeCacheBodyAsync(RulesBasedOutputCacheContext context)
+    private async ValueTask FinalizeCacheBodyAsync(RulesBasedOutputCacheContext context)
     {
         //Add to cache only not empty 200 OK requests
         if (context.HttpContext.Response.StatusCode == StatusCodes.Status200OK
@@ -198,18 +198,19 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
     private static bool OnStartResponse(RulesBasedOutputCacheContext context)
     {
-        if (!context.ResponseStarted)
+        if (context.ResponseStarted)
         {
-            context.ResponseStarted = true;
-            context.ResponseTime = DateTimeOffset.UtcNow;
-
-            return true;
+            return false;
         }
 
-        return false;
+        context.ResponseStarted = true;
+        context.ResponseTime = DateTimeOffset.UtcNow;
+
+        return true;
+
     }
 
-    internal void StartResponse(RulesBasedOutputCacheContext context)
+    private void StartResponse(RulesBasedOutputCacheContext context)
     {
         if (OnStartResponse(context))
         {
@@ -217,7 +218,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
         }
     }
 
-    internal void FinalizeCacheHeaders(RulesBasedOutputCacheContext context)
+    private void FinalizeCacheHeaders(RulesBasedOutputCacheContext context)
     {
         if (context.UseOutputCaching)
         {
@@ -254,7 +255,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
         context.OutputCacheStream.DisableBuffering();
     }
 
-    internal static void RestoreResponseStream(RulesBasedOutputCacheContext context)
+    private static void RestoreResponseStream(RulesBasedOutputCacheContext context)
     {
         // Unshim response stream
         context.HttpContext.Response.Body = context.OriginalResponseStream;
@@ -263,7 +264,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
         RemoveOutputCacheFeature(context.HttpContext);
     }
 
-    internal static async Task<bool> TryServeCachedResponseAsync(RulesBasedOutputCacheContext context, RulesBasedOutputCacheEntry? cacheEntry)
+    private static async Task<bool> TryServeCachedResponseAsync(RulesBasedOutputCacheContext context, RulesBasedOutputCacheEntry? cacheEntry)
     {
         if (cacheEntry == null)
         {
@@ -343,7 +344,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
         return false;
     }
 
-    internal static void CreateCacheKey(RulesBasedOutputCacheContext context, CachingRule matchingRule)
+    private static void CreateCacheKey(RulesBasedOutputCacheContext context, CachingRule matchingRule)
     {
         if (!string.IsNullOrEmpty(context.CacheKey))
         {
@@ -375,9 +376,9 @@ internal sealed class RulesBasedOutputCacheMiddleware
         context.CacheKey = sb.ToString();
     }
 
-    internal static void RemoveOutputCacheFeature(HttpContext context) => context.Features.Set<IRulesBasedOutputCacheFeature?>(null);
+    private static void RemoveOutputCacheFeature(HttpContext context) => context.Features.Set<IRulesBasedOutputCacheFeature?>(null);
 
-    internal static bool ContentIsNotModified(RulesBasedOutputCacheContext context)
+    private static bool ContentIsNotModified(RulesBasedOutputCacheContext context)
     {
         var cachedResponseHeaders = context.CachedResponse!.Headers;
         var ifNoneMatchHeader = context.HttpContext.Request.Headers.IfNoneMatch;
@@ -389,41 +390,45 @@ internal sealed class RulesBasedOutputCacheMiddleware
                 return true;
             }
 
-            if (cachedResponseHeaders != null && !StringValues.IsNullOrEmpty(cachedResponseHeaders[HeaderNames.ETag])
-                                              && EntityTagHeaderValue.TryParse(cachedResponseHeaders[HeaderNames.ETag].ToString(), out var eTag)
-                                              && EntityTagHeaderValue.TryParseList(ifNoneMatchHeader, out var ifNoneMatchETags))
+            if (cachedResponseHeaders == null || StringValues.IsNullOrEmpty(cachedResponseHeaders[HeaderNames.ETag])
+                                              || !EntityTagHeaderValue.TryParse(cachedResponseHeaders[HeaderNames.ETag].ToString(), out var eTag)
+                                              || !EntityTagHeaderValue.TryParseList(ifNoneMatchHeader, out var ifNoneMatchETags))
             {
-                for (var i = 0; i < ifNoneMatchETags?.Count; i++)
+                return false;
+            }
+
+            for (var i = 0; i < ifNoneMatchETags?.Count; i++)
+            {
+                var requestETag = ifNoneMatchETags[i];
+                if (eTag.Compare(requestETag, useStrongComparison: false))
                 {
-                    var requestETag = ifNoneMatchETags[i];
-                    if (eTag.Compare(requestETag, useStrongComparison: false))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
         }
         else
         {
             var ifModifiedSince = context.HttpContext.Request.Headers.IfModifiedSince;
-            if (!StringValues.IsNullOrEmpty(ifModifiedSince))
+            if (StringValues.IsNullOrEmpty(ifModifiedSince))
             {
-                if (cachedResponseHeaders == null)
-                {
-                    return false;
-                }
+                return false;
+            }
 
-                if (!HeaderUtilities.TryParseDate(cachedResponseHeaders[HeaderNames.LastModified].ToString(), out var modified) &&
-                    !HeaderUtilities.TryParseDate(cachedResponseHeaders[HeaderNames.Date].ToString(), out modified))
-                {
-                    return false;
-                }
+            if (cachedResponseHeaders == null)
+            {
+                return false;
+            }
 
-                if (HeaderUtilities.TryParseDate(ifModifiedSince.ToString(), out var modifiedSince) &&
-                    modified <= modifiedSince)
-                {
-                    return true;
-                }
+            if (!HeaderUtilities.TryParseDate(cachedResponseHeaders[HeaderNames.LastModified].ToString(), out var modified) &&
+                !HeaderUtilities.TryParseDate(cachedResponseHeaders[HeaderNames.Date].ToString(), out modified))
+            {
+                return false;
+            }
+
+            if (HeaderUtilities.TryParseDate(ifModifiedSince.ToString(), out var modifiedSince) &&
+                modified <= modifiedSince)
+            {
+                return true;
             }
         }
 

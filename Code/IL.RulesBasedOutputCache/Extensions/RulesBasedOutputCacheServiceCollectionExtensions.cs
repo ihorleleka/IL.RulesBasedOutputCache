@@ -1,6 +1,6 @@
-﻿using IL.RulesBasedOutputCache.Models;
-using IL.RulesBasedOutputCache.Persistence.Rules;
+﻿using IL.RulesBasedOutputCache.Persistence.Rules;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
+using IL.RulesBasedOutputCache.Services;
 using IL.RulesBasedOutputCache.Settings;
 using IL.VirtualViews.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -34,34 +34,39 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
                 services.AddScoped<IRulesRepository, SqlRulesRepository>();
             }
 
-            if (rulesBasedAppInsightsConfiguration is { AdminPanelEnabled: true })
+            if (rulesBasedAppInsightsConfiguration is { AdminPanel.AdminPanelEnabled: false })
             {
-                services.AddVirtualViewsCapabilities();
+                return services;
             }
+
+            AddServicesForAdminPanelRendering(services);
         }
         else
         {
             services.Configure(setupOptions ?? RulesBasedOutputCacheConfiguration.Default);
-            if (setupOptions != default)
+            if (setupOptions == default)
             {
-                var configuration = new RulesBasedOutputCacheConfiguration
-                {
-                    OutputCacheEnabled = false,
-                    AdminPanelEnabled = false,
-                    AdminPanelApiEnabled = false,
-                    DefaultCacheTimeout = default,
-                    MaximumBodySize = 0,
-                    CachingRules = new List<CachingRule>(),
-                    SqlConnectionStringName = null
-                };
-                setupOptions(configuration);
-                if (configuration.AdminPanelEnabled)
-                {
-                    services.AddVirtualViewsCapabilities();
-                }
+                return services;
             }
+
+            var configuration = new RulesBasedOutputCacheConfiguration();
+            setupOptions(configuration);
+            if (configuration is { AdminPanel.AdminPanelEnabled: false })
+            {
+                return services;
+            }
+
+            AddServicesForAdminPanelRendering(services);
         }
 
         return services;
+    }
+
+    private static void AddServicesForAdminPanelRendering(IServiceCollection services)
+    {
+        services.AddVirtualViewsCapabilities();
+        services.AddControllersWithViews().AddRazorRuntimeCompilation();
+        services.AddHttpContextAccessor();
+        services.AddSingleton<IViewRenderService, ViewRenderService>();
     }
 }

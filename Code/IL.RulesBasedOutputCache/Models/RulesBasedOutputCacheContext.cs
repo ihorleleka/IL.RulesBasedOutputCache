@@ -13,7 +13,7 @@ internal sealed class RulesBasedOutputCacheContext : IRulesBasedOutputCacheFeatu
 
     public required HttpContext HttpContext { get; init; }
 
-    public HashSet<string> Tags { get; } = new();
+    public HashSet<string> Tags { get; } = [];
 
     internal string CacheKey { get; set; } = default!;
 

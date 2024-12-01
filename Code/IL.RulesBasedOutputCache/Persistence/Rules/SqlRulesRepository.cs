@@ -38,11 +38,12 @@ internal sealed class SqlRulesRepository : DbContext, IRulesRepository
                 return cachedRulesResolvedInAnotherThread!;
             }
 
-            var rules = await CachingRules.OrderByDescending(r => r.Priority).ToListAsync();
+            var rules = await CachingRules
+                .OrderByDescending(r => r.Priority)
+                .ToListAsync();
             _cache.Set(CacheKey, rules, new MemoryCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
-                SlidingExpiration = TimeSpan.FromMinutes(10)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
             });
             return rules;
         }

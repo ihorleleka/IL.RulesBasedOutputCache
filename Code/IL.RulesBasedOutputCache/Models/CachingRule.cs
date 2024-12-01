@@ -10,19 +10,19 @@ public sealed record CachingRule : IValidatableObject
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; } = Guid.NewGuid();
     [Required]
-    public required string RuleTemplate { get; set; }
+    public required string RuleTemplate { get; init; }
     [Required]
-    public required RuleType RuleType { get; set; }
+    public required RuleType RuleType { get; init; }
     [Required]
-    public required RuleAction RuleAction { get; set; }
+    public required RuleAction RuleAction { get; init; }
 
     [Required]
     public int Priority { get; set; }
-    public bool VaryByQueryString { get; set; }
-    public bool VaryByUser { get; set; }
-    public bool VaryByHost { get; set; }
-    public bool VaryByCulture { get; set; }
-    public TimeSpan? ResponseExpirationTimeSpan { get; set; }
+    public bool VaryByQueryString { get; init; }
+    public bool VaryByUser { get; init; }
+    public bool VaryByHost { get; init; }
+    public bool VaryByCulture { get; init; }
+    public TimeSpan? ResponseExpirationTimeSpan { get; init; }
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         var validationResults = new List<ValidationResult>();
@@ -55,7 +55,7 @@ public sealed record CachingRule : IValidatableObject
                 break;
 
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(validationContext));
         }
 
         return validationResults;

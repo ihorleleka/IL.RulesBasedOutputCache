@@ -7,12 +7,12 @@ internal sealed class RulesBasedOutputCacheEntry
     /// <summary>
     /// Gets the created date and time of the cache entry.
     /// </summary>
-    internal DateTimeOffset Created { get; set; }
+    internal DateTimeOffset Created { get; init; }
 
     /// <summary>
     /// Gets the status code of the cache entry.
     /// </summary>
-    internal int StatusCode { get; set; }
+    internal int StatusCode { get; init; }
 
     /// <summary>
     /// Gets the headers of the cache entry.
@@ -27,5 +27,5 @@ internal sealed class RulesBasedOutputCacheEntry
     /// <summary>
     /// Gets the tags of the cache entry.
     /// </summary>
-    internal string[] Tags { get; set; } = Array.Empty<string>();
+    internal string[] Tags { get; init; } = [];
 }
