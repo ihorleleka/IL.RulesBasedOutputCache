@@ -56,7 +56,9 @@ Library comes with [schema file](https://github.com/lelekaihor/IL.RulesBasedOutp
 - **DefaultCacheTimeout** - default expiration time for your cache entries, if not set up on the rule itself
 - **CachingRules** - array of caching rules the system will have on application startup
 - **SqlConnectionStringName** - optional string parameter, if provided will replace in-memory storage for rules with SQL based. You need to provide only the NAME of connection string, not the connection string itself. Database and/or required table will br created automatically, all the needed migrations will be automatically applied with new versions of library.
-- **OutputCacheAdminPanelEnabled** - enables Admin panel api and access to admin panel page, which is available by url `/rulesBasedCache/adminPanel`
+- **AdminPanel/OutputCacheAdminPanelEnabled** - enables Admin access to admin panel page, which is available by url `/rulesBasedCache/adminPanel`
+- **AdminPanel/AdminPanelApiEnabled** - enables Admin panel api, which is used by admin panel
+- **AdminPanel/AdminPanelUrl** - configures url where admin panel will be available, default value is `/rulesBasedCache/adminPanel`
 
 ### Caching rule parameters:
 
