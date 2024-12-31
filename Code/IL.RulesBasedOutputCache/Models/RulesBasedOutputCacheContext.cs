@@ -15,10 +15,10 @@ internal sealed class RulesBasedOutputCacheContext : IRulesBasedOutputCacheFeatu
 
     public HashSet<string> Tags { get; } = [];
 
-    internal string CacheKey { get; set; } = default!;
+    internal string CacheKey { get; set; } = null!;
 
-    internal Stream OriginalResponseStream { get; set; } = default!;
-    internal RulesBasedOutputCacheStream OutputCacheStream { get; set; } = default!;
+    internal Stream OriginalResponseStream { get; set; } = null!;
+    internal RulesBasedOutputCacheStream OutputCacheStream { get; set; } = null!;
     internal bool ResponseStarted { get; set; }
     internal DateTimeOffset? ResponseTime { get; set; }
     internal TimeSpan? ResponseExpirationTimeSpan { get; set; }

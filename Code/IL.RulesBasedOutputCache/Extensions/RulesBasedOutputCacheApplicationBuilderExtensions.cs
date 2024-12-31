@@ -15,8 +15,8 @@ namespace IL.RulesBasedOutputCache.Extensions;
 public static class RulesBasedOutputCacheApplicationBuilderExtensions
 {
     public static WebApplication UseRulesBasedOutputCache(this WebApplication app,
-        Action<RouteHandlerBuilder>? configureAdminPanelEndpoint = default,
-        Action<RouteGroupBuilder>? configureAdminPanelApiEndpoints = default)
+        Action<RouteHandlerBuilder>? configureAdminPanelEndpoint = null,
+        Action<RouteGroupBuilder>? configureAdminPanelApiEndpoints = null)
     {
         InitializeDatabase(app);
         var options = app.Services.GetRequiredService<IOptions<RulesBasedOutputCacheConfiguration>>().Value;

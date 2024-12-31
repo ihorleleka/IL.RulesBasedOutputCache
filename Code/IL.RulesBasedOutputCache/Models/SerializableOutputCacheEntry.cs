@@ -4,7 +4,7 @@ internal sealed class SerializableOutputCacheEntry
 {
     internal DateTimeOffset Created { get; set; }
     internal int StatusCode { get; set; }
-    internal Dictionary<string, string?[]> Headers { get; set; } = default!;
-    internal List<byte[]> Body { get; set; } = default!;
-    internal string[] Tags { get; set; } = default!;
+    internal Dictionary<string, string?[]> Headers { get; set; } = null!;
+    internal List<byte[]> Body { get; set; } = null!;
+    internal string[] Tags { get; set; } = null!;
 }

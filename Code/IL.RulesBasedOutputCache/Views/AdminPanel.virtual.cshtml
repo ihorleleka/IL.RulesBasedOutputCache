@@ -153,7 +153,7 @@
     <!-- Add a new rule section -->
     <div class="new-rule-container">
         <h2>Add a new rule</h2>
-        <form method="post" action="/api/rulesBasedCache/addRule">
+        <form id="addRuleForm" method="post" action="/api/rulesBasedCache/addRule">
             <input type="hidden" name="ruleId" value="@Guid.NewGuid().ToString()" />
             <div class="form-group">
                 <label for="ruleTemplate">Rule Template:</label>
@@ -199,7 +199,7 @@
 
             <div class="form-group">
                 <label for="responseExpirationTimeSpan">Response Expiration Time:</label>
-                <input type="text" name="responseExpirationTimeSpan" placeholder="Use TimeSpan format => 00:00:00" />
+                <input type="text" id="responseExpirationTimeSpan" name="responseExpirationTimeSpan" placeholder="Use TimeSpan format => 00:00:00" />
             </div>
 
             <div class="center-button">
@@ -253,6 +253,14 @@
                     checkbox.value = checkbox.checked ? "true" : "false";
                 });
             });
+        });
+        
+        var responseExpirationInput = document.getElementById('responseExpirationTimeSpan');
+        var form = document.getElementById('addRuleForm');
+        form.addEventListener('submit', function (event) {
+            if (responseExpirationInput && responseExpirationInput.value.trim() === '') {
+                responseExpirationInput.value = null;
+            }
         });
     </script>
 </body>

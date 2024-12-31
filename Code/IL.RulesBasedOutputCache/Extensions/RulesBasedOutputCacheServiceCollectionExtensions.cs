@@ -12,11 +12,11 @@ namespace IL.RulesBasedOutputCache.Extensions;
 public static class RulesBasedOutputCacheServiceCollectionExtensions
 {
     /// <inheritdoc cref="RulesBasedOutputCacheWebAppBuilderExtensions.AddRulesBasedOutputCache" />
-    public static IServiceCollection AddRulesBasedOutputCache(this IServiceCollection services, IConfiguration config,
+    public static IServiceCollection AddRulesBasedOutputCache(this IServiceCollection services, 
+        IConfiguration config,
         Action<RulesBasedOutputCacheConfiguration>? setupOptions = null)
     {
         services.AddOutputCache();
-        services.AddMemoryCache();
         services.AddScoped<IRulesRepository, InMemoryRulesRepository>();
         var section = config.GetSection(Constants.Constants.ConfigurationSection);
         if (section.Exists())
@@ -44,7 +44,7 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
         else
         {
             services.Configure(setupOptions ?? RulesBasedOutputCacheConfiguration.Default);
-            if (setupOptions == default)
+            if (setupOptions == null)
             {
                 return services;
             }

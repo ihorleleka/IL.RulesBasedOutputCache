@@ -25,11 +25,11 @@ internal sealed class InMemoryRulesRepository : IRulesRepository
             }));
     }
 
-    public Task<List<CachingRule>> GetAll() => Task.FromResult(_rules!.ToList());
+    public Task<List<CachingRule>> GetAll() => Task.FromResult(_rules?.ToList() ?? []);
 
     public Task AddRule(CachingRule rule)
     {
-        _rules!.Add(rule);
+        _rules?.Add(rule);
         return Task.CompletedTask;
     }
 
@@ -43,9 +43,9 @@ internal sealed class InMemoryRulesRepository : IRulesRepository
 
     public Task DeleteRuleById(Guid id)
     {
-        if (_rules!.FirstOrDefault(x => x.Id == id) is { } rule)
+        if (_rules?.FirstOrDefault(x => x.Id == id) is { } rule)
         {
-            _rules!.Remove(rule);
+            _rules.Remove(rule);
         }
 
         return Task.CompletedTask;

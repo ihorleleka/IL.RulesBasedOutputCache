@@ -7,45 +7,45 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace IL.RulesBasedOutputCache.Persistence.Rules;
 
-//Migration pattern: dotnet ef --startup-project ./Code/IL.RulesBasedOutputCache.csproj migrations add {MigrationName} --context SqlRulesRepository --output-dir Migrations --project ./Code/IL.RulesBasedOutputCache.csproj
 internal sealed class SqlRulesRepository : DbContext, IRulesRepository
 {
-    private const string CacheKey = "CachingRules";
-    private readonly IMemoryCache _cache;
+    private const string LockKey = "SqlRulesAccess";
+    private List<CachingRule>? _cachedValues;
+
     private DbSet<CachingRule> CachingRules { get; set; }
 
-    public SqlRulesRepository(DbContextOptions<SqlRulesRepository> options, IMemoryCache memoryCache) : base(options)
+    private DbSet<CacheMetadata> CacheMetadata { get; set; }
+
+    public SqlRulesRepository(DbContextOptions<SqlRulesRepository> options) : base(options)
     {
-        _cache = memoryCache;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CachingRule>().HasKey(x => x.Id);
+        modelBuilder.Entity<CacheMetadata>().HasKey(x => x.Id);
     }
 
     public async Task<List<CachingRule>> GetAll()
     {
-        if (_cache.TryGetValue(CacheKey, out List<CachingRule>? cachedRules) && cachedRules != null)
+        var metadata = await CacheMetadata.AsNoTracking().FirstOrDefaultAsync();
+        if (AreCachedRulesValid(metadata))
         {
-            return cachedRules!;
+            return _cachedValues!;
         }
 
-        using (await LockManager.GetLockAsync(CacheKey))
+        using (await LockManager.GetLockAsync(LockKey))
         {
-            if (_cache.TryGetValue(CacheKey, out List<CachingRule>? cachedRulesResolvedInAnotherThread) && cachedRules != null)
+            metadata = await CacheMetadata.AsNoTracking().FirstOrDefaultAsync();
+            if (AreCachedRulesValid(metadata))
             {
-                return cachedRulesResolvedInAnotherThread!;
+                return _cachedValues!;
             }
 
-            var rules = await CachingRules
+            _cachedValues = await CachingRules
                 .OrderByDescending(r => r.Priority)
                 .ToListAsync();
-            _cache.Set(CacheKey, rules, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-            });
-            return rules;
+            return _cachedValues;
         }
     }
 
@@ -57,18 +57,31 @@ internal sealed class SqlRulesRepository : DbContext, IRulesRepository
             return;
         }
 
-        using (await LockManager.GetLockAsync(CacheKey))
+        using (await LockManager.GetLockAsync(LockKey))
         {
             rule.Priority = rule.GetPriority();
             CachingRules.Add(rule);
+            await SetOrUpdateMetadata();
             await SaveChangesAsync();
-            _cache.Remove(CacheKey);
+        }
+    }
+
+    private async Task SetOrUpdateMetadata()
+    {
+        var metadata = await CacheMetadata.FirstOrDefaultAsync();
+        if (metadata == null)
+        {
+            CacheMetadata.Add(new CacheMetadata { LastUpdated = DateTime.UtcNow });
+        }
+        else
+        {
+            metadata.LastUpdated = DateTime.UtcNow;
         }
     }
 
     public async Task AddRules(List<CachingRule> rules)
     {
-        using (await LockManager.GetLockAsync(CacheKey))
+        using (await LockManager.GetLockAsync(LockKey))
         {
             foreach (var cachingRule in rules)
             {
@@ -76,22 +89,27 @@ internal sealed class SqlRulesRepository : DbContext, IRulesRepository
             }
 
             CachingRules.AddRange(rules);
+            await SetOrUpdateMetadata();
             await SaveChangesAsync();
-            _cache.Remove(CacheKey);
         }
     }
 
     public async Task DeleteRuleById(Guid id)
     {
-        using (await LockManager.GetLockAsync(CacheKey))
+        using (await LockManager.GetLockAsync(LockKey))
         {
             var rule = await CachingRules.FirstOrDefaultAsync(r => r.Id == id);
             if (rule != null)
             {
                 CachingRules.Remove(rule);
+                await SetOrUpdateMetadata();
                 await SaveChangesAsync();
-                _cache.Remove(CacheKey);
             }
         }
     }
+
+    private bool AreCachedRulesValid(CacheMetadata? metadata) =>
+        _cachedValues != null &&
+        metadata != null
+        && DateTime.UtcNow > metadata.LastUpdated;
 }
