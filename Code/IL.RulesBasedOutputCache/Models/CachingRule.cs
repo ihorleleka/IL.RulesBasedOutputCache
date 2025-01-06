@@ -22,7 +22,7 @@ public sealed record CachingRule : IValidatableObject
     public bool VaryByUser { get; init; }
     public bool VaryByHost { get; init; }
     public bool VaryByCulture { get; init; }
-    public TimeSpan? ResponseExpirationTimeSpan { get; init; }
+    public string? ResponseExpirationTimeSpan { get; init; }
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         var validationResults = new List<ValidationResult>();
@@ -48,7 +48,7 @@ public sealed record CachingRule : IValidatableObject
                 break;
 
             case RuleType.Regex:
-                if (!(RuleTemplate.StartsWith("/") && RuleTemplate.Contains('*')))
+                if (!(RuleTemplate.StartsWith('/') && RuleTemplate.Contains('*')))
                 {
                     validationResults.Add(new ValidationResult($"RuleTemplate has invalid value for given RuleType: {Enum.GetName(RuleType)}."));
                 }

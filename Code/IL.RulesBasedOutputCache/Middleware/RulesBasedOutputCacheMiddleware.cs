@@ -126,7 +126,11 @@ internal sealed class RulesBasedOutputCacheMiddleware
             return;
         }
 
-        context.ResponseExpirationTimeSpan = matchingRule.ResponseExpirationTimeSpan;
+        if (!string.IsNullOrEmpty(matchingRule.ResponseExpirationTimeSpan))
+        {
+            context.ResponseExpirationTimeSpan = TimeSpan.Parse(matchingRule.ResponseExpirationTimeSpan);
+        }
+
         CreateCacheKey(context, matchingRule);
         context.UseOutputCaching = !string.IsNullOrEmpty(context.CacheKey);
     }
@@ -207,7 +211,6 @@ internal sealed class RulesBasedOutputCacheMiddleware
         context.ResponseTime = DateTimeOffset.UtcNow;
 
         return true;
-
     }
 
     private void StartResponse(RulesBasedOutputCacheContext context)
