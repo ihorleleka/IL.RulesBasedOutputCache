@@ -3,13 +3,14 @@ using IL.RulesBasedOutputCache.Extensions;
 using IL.RulesBasedOutputCache.Models;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace IL.RulesBasedOutputCache.Persistence.Rules;
 
 internal sealed class SqlRulesRepository : DbContext, IRulesRepository
 {
     private const string LockKey = "SqlRulesAccess";
+    private const int RefreshRateInMinutes = 5;
+    private static DateTime? _lastUpdated;
     private List<CachingRule>? _cachedValues;
 
     private DbSet<CachingRule> CachingRules { get; set; }
@@ -68,6 +69,7 @@ internal sealed class SqlRulesRepository : DbContext, IRulesRepository
 
     private async Task SetOrUpdateMetadata()
     {
+        _lastUpdated = DateTime.UtcNow;
         var metadata = await CacheMetadata.FirstOrDefaultAsync();
         if (metadata == null)
         {
@@ -110,6 +112,8 @@ internal sealed class SqlRulesRepository : DbContext, IRulesRepository
 
     private bool AreCachedRulesValid(CacheMetadata? metadata) =>
         _cachedValues != null &&
-        metadata != null
-        && DateTime.UtcNow > metadata.LastUpdated;
+        (_lastUpdated != null && (DateTime.UtcNow - _lastUpdated).Value.Minutes <= RefreshRateInMinutes
+         ||
+         metadata != null
+         && DateTime.UtcNow > metadata.LastUpdated);
 }
