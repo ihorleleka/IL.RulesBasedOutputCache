@@ -17,6 +17,16 @@ internal sealed class SqlRulesRepository : DbContext, IRulesRepository
 
     private DbSet<CacheMetadata> CacheMetadata { get; set; }
 
+    //dotnet ef --startup-project ./Code/IL.RulesBasedOutputCache/IL.RulesBasedOutputCache.csproj migrations add TimeSpanToString --context SqlRulesRepository --output-dir Migrations --project ./Code/IL.RulesBasedOutputCache/IL.RulesBasedOutputCache.csproj
+    //Uncomment for migrations purpose
+    // public SqlRulesRepository()
+    // {
+    // }
+    // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    // {
+    //     optionsBuilder.UseSqlServer();
+    //     base.OnConfiguring(optionsBuilder);
+    // }
     public SqlRulesRepository(DbContextOptions<SqlRulesRepository> options) : base(options)
     {
     }
