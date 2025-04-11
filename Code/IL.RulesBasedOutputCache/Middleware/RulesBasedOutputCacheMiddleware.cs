@@ -120,7 +120,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
             rules = await rulesRepository.GetAll();
         }
 
-        var matchingRule = rules.FirstOrDefault(x => x.MatchesCurrentRequest(context.HttpContext));
+        var matchingRule = rules.FirstOrDefault(x => x.MatchesCurrentRequest(context.HttpContext.Request.Path.Value!));
         if (matchingRule == null || matchingRule.RuleAction == RuleAction.Disallow)
         {
             return;
