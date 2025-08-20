@@ -190,10 +190,11 @@ internal sealed class RulesBasedOutputCacheMiddleware
                 {
                     context.CachedResponse!.Headers ??= new HeaderDictionary();
                     context.CachedResponse.Headers.ContentLength = cachedResponseBody.Length;
-                    if (_cacheConfiguration.OutputCustomHeader)
-                    {
-                        context.CachedResponse.Headers[_cacheConfiguration.CustomHeaderKey] = "1";
-                    }
+                }
+                if (_cacheConfiguration.OutputCustomHeader)
+                {
+                    context.CachedResponse!.Headers ??= new HeaderDictionary();
+                    context.CachedResponse.Headers[_cacheConfiguration.CustomHeaderKey] = "1";
                 }
 
                 context.CachedResponse!.Body = cachedResponseBody;
