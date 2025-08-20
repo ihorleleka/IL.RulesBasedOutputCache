@@ -4,10 +4,15 @@ namespace IL.RulesBasedOutputCache.Settings;
 
 public sealed class RulesBasedOutputCacheConfiguration
 {
+    public const string CustomHeaderKeyDefault = "OutputCache";
     internal static Action<RulesBasedOutputCacheConfiguration> Default = _ => { };
 
     public bool OutputCacheEnabled { get; init; }
 
+    public bool OutputCustomHeader { get; init; }
+    
+    public string CustomHeaderKey { get; init; } = CustomHeaderKeyDefault;
+    
     public TimeSpan DefaultCacheTimeout { get; init; } = TimeSpan.FromMinutes(5);
 
     /// <summary>

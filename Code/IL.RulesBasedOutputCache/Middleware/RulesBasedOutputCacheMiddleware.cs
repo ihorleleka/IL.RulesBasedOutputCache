@@ -20,7 +20,8 @@ namespace IL.RulesBasedOutputCache.Middleware;
 internal sealed class RulesBasedOutputCacheMiddleware
 {
     // see https://tools.ietf.org/html/rfc7232#section-4.1
-    private static readonly string[] HeadersToIncludeIn304 = ["Cache-Control", "Content-Location", "Date", "ETag", "Expires", "Vary"];
+    private static readonly string[] HeadersToIncludeIn304 =
+        ["Cache-Control", "Content-Location", "Date", "ETag", "Expires", "Vary"];
 
     private static int BodySegmentSize { get; set; } = 81920;
 
@@ -137,14 +138,16 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
     private async Task<bool> TryServeFromCacheAsync(RulesBasedOutputCacheContext cacheContext)
     {
-        var cacheEntry = await RulesBasedOutputCacheEntrySerializer.GetAsync(cacheContext.CacheKey, _store, cacheContext.HttpContext.RequestAborted);
+        var cacheEntry = await RulesBasedOutputCacheEntrySerializer.GetAsync(cacheContext.CacheKey, _store,
+            cacheContext.HttpContext.RequestAborted);
 
         if (await TryServeCachedResponseAsync(cacheContext, cacheEntry))
         {
             return true;
         }
 
-        if (HeaderUtilities.ContainsCacheDirective(cacheContext.HttpContext.Request.Headers.CacheControl, CacheControlHeaderValue.OnlyIfCachedString))
+        if (HeaderUtilities.ContainsCacheDirective(cacheContext.HttpContext.Request.Headers.CacheControl,
+                CacheControlHeaderValue.OnlyIfCachedString))
         {
             cacheContext.HttpContext.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
             return true;
@@ -187,6 +190,10 @@ internal sealed class RulesBasedOutputCacheMiddleware
                 {
                     context.CachedResponse!.Headers ??= new HeaderDictionary();
                     context.CachedResponse.Headers.ContentLength = cachedResponseBody.Length;
+                    if (_cacheConfiguration.OutputCustomHeader)
+                    {
+                        context.CachedResponse.Headers[_cacheConfiguration.CustomHeaderKey] = "1";
+                    }
                 }
 
                 context.CachedResponse!.Body = cachedResponseBody;
@@ -228,7 +235,8 @@ internal sealed class RulesBasedOutputCacheMiddleware
             // Create the cache entry now
             var response = context.HttpContext.Response;
             var headers = response.Headers;
-            context.CachedResponseValidFor = context.ResponseExpirationTimeSpan ?? _cacheConfiguration.DefaultCacheTimeout;
+            context.CachedResponseValidFor =
+                context.ResponseExpirationTimeSpan ?? _cacheConfiguration.DefaultCacheTimeout;
 
             // Setting the date on the raw response headers.
             headers.Date = HeaderUtilities.FormatDate(context.ResponseTime!.Value);
@@ -267,7 +275,8 @@ internal sealed class RulesBasedOutputCacheMiddleware
         RemoveOutputCacheFeature(context.HttpContext);
     }
 
-    private static async Task<bool> TryServeCachedResponseAsync(RulesBasedOutputCacheContext context, RulesBasedOutputCacheEntry? cacheEntry)
+    private static async Task<bool> TryServeCachedResponseAsync(RulesBasedOutputCacheContext context,
+        RulesBasedOutputCacheEntry? cacheEntry)
     {
         if (cacheEntry == null)
         {
@@ -323,7 +332,8 @@ internal sealed class RulesBasedOutputCacheMiddleware
                 // Note: int64 division truncates result and errors may be up to 1 second. This reduction in
                 // accuracy of age calculation is considered appropriate since it is small compared to clock
                 // skews and the "Age" header is an estimate of the real age of cached content.
-                response.Headers.Age = HeaderUtilities.FormatNonNegativeInt64(context.CachedEntryAge.Ticks / TimeSpan.TicksPerSecond);
+                response.Headers.Age =
+                    HeaderUtilities.FormatNonNegativeInt64(context.CachedEntryAge.Ticks / TimeSpan.TicksPerSecond);
 
                 // Copy the cached response body
                 var body = context.CachedResponse.Body;
@@ -373,13 +383,15 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
         if (matchingRule.VaryByCulture)
         {
-            sb.Append(CultureInfo.CurrentCulture.TwoLetterISOLanguageName + CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+            sb.Append(CultureInfo.CurrentCulture.TwoLetterISOLanguageName +
+                      CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
         }
 
         context.CacheKey = sb.ToString();
     }
 
-    private static void RemoveOutputCacheFeature(HttpContext context) => context.Features.Set<IRulesBasedOutputCacheFeature?>(null);
+    private static void RemoveOutputCacheFeature(HttpContext context) =>
+        context.Features.Set<IRulesBasedOutputCacheFeature?>(null);
 
     private static bool ContentIsNotModified(RulesBasedOutputCacheContext context)
     {
@@ -388,14 +400,17 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
         if (!StringValues.IsNullOrEmpty(ifNoneMatchHeader))
         {
-            if (ifNoneMatchHeader.Count == 1 && StringSegment.Equals(ifNoneMatchHeader[0], EntityTagHeaderValue.Any.Tag, StringComparison.OrdinalIgnoreCase))
+            if (ifNoneMatchHeader.Count == 1 && StringSegment.Equals(ifNoneMatchHeader[0], EntityTagHeaderValue.Any.Tag,
+                    StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
 
             if (cachedResponseHeaders == null || StringValues.IsNullOrEmpty(cachedResponseHeaders[HeaderNames.ETag])
-                                              || !EntityTagHeaderValue.TryParse(cachedResponseHeaders[HeaderNames.ETag].ToString(), out var eTag)
-                                              || !EntityTagHeaderValue.TryParseList(ifNoneMatchHeader, out var ifNoneMatchETags))
+                                              || !EntityTagHeaderValue.TryParse(
+                                                  cachedResponseHeaders[HeaderNames.ETag].ToString(), out var eTag)
+                                              || !EntityTagHeaderValue.TryParseList(ifNoneMatchHeader,
+                                                  out var ifNoneMatchETags))
             {
                 return false;
             }
@@ -422,7 +437,8 @@ internal sealed class RulesBasedOutputCacheMiddleware
                 return false;
             }
 
-            if (!HeaderUtilities.TryParseDate(cachedResponseHeaders[HeaderNames.LastModified].ToString(), out var modified) &&
+            if (!HeaderUtilities.TryParseDate(cachedResponseHeaders[HeaderNames.LastModified].ToString(),
+                    out var modified) &&
                 !HeaderUtilities.TryParseDate(cachedResponseHeaders[HeaderNames.Date].ToString(), out modified))
             {
                 return false;
