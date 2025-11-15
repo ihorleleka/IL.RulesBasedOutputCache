@@ -11,6 +11,7 @@ using IL.RulesBasedOutputCache.StreamExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
@@ -25,12 +26,14 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
     private static int BodySegmentSize { get; set; } = 81920;
 
+    private readonly ILogger<RulesBasedOutputCacheMiddleware> _logger;
     private readonly RequestDelegate _next;
     private readonly IOutputCacheStore _store;
     private readonly IServiceProvider _serviceProvider;
     private readonly RulesBasedOutputCacheConfiguration _cacheConfiguration;
 
     public RulesBasedOutputCacheMiddleware(
+        ILogger<RulesBasedOutputCacheMiddleware> logger,
         RequestDelegate next,
         IOutputCacheStore store,
         IServiceProvider serviceProvider,
@@ -40,6 +43,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(cacheConfiguration.Value);
 
+        _logger = logger;
         _next = next;
         _store = store;
         _serviceProvider = serviceProvider;
@@ -101,12 +105,11 @@ internal sealed class RulesBasedOutputCacheMiddleware
         }
     }
 
-    private static void AddOutputCacheFeature(RulesBasedOutputCacheContext context)
+    private void AddOutputCacheFeature(RulesBasedOutputCacheContext context)
     {
         if (context.HttpContext.Features.Get<IRulesBasedOutputCacheFeature>() != null)
         {
-            throw new InvalidOperationException(
-                $"Another instance of {nameof(RulesBasedOutputCacheContext)} already exists. Only one instance of {nameof(RulesBasedOutputCacheContext)} can be configured for an application.");
+            _logger.LogWarning($"Another instance of {nameof(RulesBasedOutputCacheContext)} already exists. Only one instance of {nameof(RulesBasedOutputCacheContext)} can be configured for an application.");
         }
 
         context.HttpContext.Features.Set<IRulesBasedOutputCacheFeature>(context);
