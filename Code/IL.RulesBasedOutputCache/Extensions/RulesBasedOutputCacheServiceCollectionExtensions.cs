@@ -12,7 +12,7 @@ namespace IL.RulesBasedOutputCache.Extensions;
 public static class RulesBasedOutputCacheServiceCollectionExtensions
 {
     /// <inheritdoc cref="RulesBasedOutputCacheWebAppBuilderExtensions.AddRulesBasedOutputCache" />
-    public static IServiceCollection AddRulesBasedOutputCache(this IServiceCollection services, 
+    public static IServiceCollection AddRulesBasedOutputCache(this IServiceCollection services,
         IConfiguration config,
         Action<RulesBasedOutputCacheConfiguration>? setupOptions = null)
     {
@@ -40,6 +40,7 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
             }
 
             AddServicesForAdminPanelRendering(services);
+            TryConfigureRedisStore(services, config, rulesBasedAppInsightsConfiguration);
         }
         else
         {
@@ -57,9 +58,22 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
             }
 
             AddServicesForAdminPanelRendering(services);
+            TryConfigureRedisStore(services, config, configuration);
         }
 
         return services;
+    }
+
+    private static void TryConfigureRedisStore(IServiceCollection services, IConfiguration config, RulesBasedOutputCacheConfiguration? rulesBasedAppInsightsConfiguration)
+    {
+        if (!string.IsNullOrEmpty(rulesBasedAppInsightsConfiguration?.RedisConnectionStringName))
+        {
+            services.AddStackExchangeRedisOutputCache(options =>
+            {
+                options.Configuration = config.GetConnectionString(rulesBasedAppInsightsConfiguration.RedisConnectionStringName);
+                options.InstanceName = rulesBasedAppInsightsConfiguration.RedisInstanceName;
+            });
+        }
     }
 
     private static void AddServicesForAdminPanelRendering(IServiceCollection services)

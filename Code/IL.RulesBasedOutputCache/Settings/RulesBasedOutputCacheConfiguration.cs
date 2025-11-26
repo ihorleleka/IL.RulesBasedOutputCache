@@ -25,6 +25,8 @@ public sealed class RulesBasedOutputCacheConfiguration
     public string? SqlConnectionStringName { get; init; }
 
     public AdminPanelConfiguration AdminPanel { get; init; } = new();
+    public string? RedisConnectionStringName { get; init; }
+    public string? RedisInstanceName { get; init; }
 }
 
 public sealed class AdminPanelConfiguration
