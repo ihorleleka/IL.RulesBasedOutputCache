@@ -18,43 +18,20 @@ using Microsoft.Net.Http.Headers;
 
 namespace IL.RulesBasedOutputCache.Middleware;
 
-internal sealed class RulesBasedOutputCacheMiddleware
+internal sealed class RulesBasedOutputCacheMiddleware(ILogger<RulesBasedOutputCacheMiddleware> logger,
+    IOutputCacheStore store,
+    IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration) : IMiddleware
 {
     // see https://tools.ietf.org/html/rfc7232#section-4.1
-    private static readonly string[] HeadersToIncludeIn304 =
-        ["Cache-Control", "Content-Location", "Date", "ETag", "Expires", "Vary"];
+    private static readonly string[] HeadersToIncludeIn304 = ["Cache-Control", "Content-Location", "Date", "ETag", "Expires", "Vary"];
 
     private static int BodySegmentSize { get; set; } = 81920;
-
-    private readonly ILogger<RulesBasedOutputCacheMiddleware> _logger;
-    private readonly RequestDelegate _next;
-    private readonly IOutputCacheStore _store;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly RulesBasedOutputCacheConfiguration _cacheConfiguration;
-
-    public RulesBasedOutputCacheMiddleware(
-        ILogger<RulesBasedOutputCacheMiddleware> logger,
-        RequestDelegate next,
-        IOutputCacheStore store,
-        IServiceProvider serviceProvider,
-        IOptions<RulesBasedOutputCacheConfiguration> cacheConfiguration)
+    
+    public async Task InvokeAsync(HttpContext httpContext, RequestDelegate next)
     {
-        ArgumentNullException.ThrowIfNull(next);
-        ArgumentNullException.ThrowIfNull(store);
-        ArgumentNullException.ThrowIfNull(cacheConfiguration.Value);
-
-        _logger = logger;
-        _next = next;
-        _store = store;
-        _serviceProvider = serviceProvider;
-        _cacheConfiguration = cacheConfiguration.Value;
-    }
-
-    public async Task Invoke(HttpContext httpContext)
-    {
-        if (!_cacheConfiguration.OutputCacheEnabled)
+        if (!cacheConfiguration.Value.OutputCacheEnabled)
         {
-            await _next(httpContext);
+            await next(httpContext);
             return;
         }
 
@@ -64,15 +41,15 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
         if (!context.UseOutputCaching)
         {
-            await _next(context.HttpContext);
+            await next(context.HttpContext);
             return;
         }
 
         //prevent admin panel from being cached
         if (!string.IsNullOrEmpty(context.HttpContext.Request.Path.Value)
-            && context.HttpContext.Request.Path.Value.StartsWith(_cacheConfiguration.AdminPanel.AdminPanelUrl))
+            && context.HttpContext.Request.Path.Value.StartsWith(cacheConfiguration.Value.AdminPanel.AdminPanelUrl))
         {
-            await _next(context.HttpContext);
+            await next(context.HttpContext);
             return;
         }
 
@@ -86,7 +63,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
                 }
 
                 InterceptResponseStream(context);
-                await _next(httpContext);
+                await next(httpContext);
                 try
                 {
                     await FinalizeCacheBodyAsync(context);
@@ -109,20 +86,16 @@ internal sealed class RulesBasedOutputCacheMiddleware
     {
         if (context.HttpContext.Features.Get<IRulesBasedOutputCacheFeature>() != null)
         {
-            _logger.LogWarning($"Another instance of {nameof(RulesBasedOutputCacheContext)} already exists. Only one instance of {nameof(RulesBasedOutputCacheContext)} can be configured for an application.");
+            logger.LogWarning($"Another instance of {nameof(RulesBasedOutputCacheContext)} already exists. Only one instance of {nameof(RulesBasedOutputCacheContext)} can be configured for an application.");
         }
 
         context.HttpContext.Features.Set<IRulesBasedOutputCacheFeature>(context);
     }
 
-    private async Task FindMatchingCachingRuleAndSetVariables(RulesBasedOutputCacheContext context)
+    private static async Task FindMatchingCachingRuleAndSetVariables(RulesBasedOutputCacheContext context)
     {
-        List<CachingRule> rules;
-        using (var scope = _serviceProvider.CreateScope())
-        {
-            var rulesRepository = scope.ServiceProvider.GetRequiredService<IRulesRepository>();
-            rules = await rulesRepository.GetAll();
-        }
+        var rulesRepository = context.HttpContext.RequestServices.GetRequiredService<IRulesRepository>();
+        var rules = await rulesRepository.GetAll();
 
         var matchingRule = rules.FirstOrDefault(x => x.MatchesCurrentRequest(context.HttpContext.Request.Path.Value!));
         if (matchingRule == null || matchingRule.RuleAction == RuleAction.Disallow)
@@ -141,8 +114,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
 
     private async Task<bool> TryServeFromCacheAsync(RulesBasedOutputCacheContext cacheContext)
     {
-        var cacheEntry = await RulesBasedOutputCacheEntrySerializer.GetAsync(cacheContext.CacheKey, _store,
-            cacheContext.HttpContext.RequestAborted);
+        var cacheEntry = await RulesBasedOutputCacheEntrySerializer.GetAsync(cacheContext.CacheKey, store, cacheContext.HttpContext.RequestAborted);
 
         if (await TryServeCachedResponseAsync(cacheContext, cacheEntry))
         {
@@ -165,7 +137,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
         context.OriginalResponseStream = context.HttpContext.Response.Body;
         context.OutputCacheStream = new RulesBasedOutputCacheStream(
             context.OriginalResponseStream,
-            _cacheConfiguration.MaximumBodySize,
+            cacheConfiguration.Value.MaximumBodySize,
             BodySegmentSize,
             () => StartResponse(context));
         context.HttpContext.Response.Body = context.OutputCacheStream;
@@ -194,10 +166,10 @@ internal sealed class RulesBasedOutputCacheMiddleware
                     context.CachedResponse!.Headers ??= new HeaderDictionary();
                     context.CachedResponse.Headers.ContentLength = cachedResponseBody.Length;
                 }
-                if (_cacheConfiguration.OutputCustomHeader)
+                if (cacheConfiguration.Value.OutputCustomHeader)
                 {
                     context.CachedResponse!.Headers ??= new HeaderDictionary();
-                    context.CachedResponse.Headers[_cacheConfiguration.CustomHeaderKey] = "1";
+                    context.CachedResponse.Headers[cacheConfiguration.Value.CustomHeaderKey] = "1";
                 }
 
                 context.CachedResponse!.Body = cachedResponseBody;
@@ -205,7 +177,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
                 await RulesBasedOutputCacheEntrySerializer.StoreAsync(context.CacheKey,
                     context.CachedResponse,
                     context.CachedResponseValidFor,
-                    _store,
+                    store,
                     context.HttpContext.RequestAborted);
             }
         }
@@ -239,8 +211,7 @@ internal sealed class RulesBasedOutputCacheMiddleware
             // Create the cache entry now
             var response = context.HttpContext.Response;
             var headers = response.Headers;
-            context.CachedResponseValidFor =
-                context.ResponseExpirationTimeSpan ?? _cacheConfiguration.DefaultCacheTimeout;
+            context.CachedResponseValidFor = context.ResponseExpirationTimeSpan ?? cacheConfiguration.Value.DefaultCacheTimeout;
 
             // Setting the date on the raw response headers.
             headers.Date = HeaderUtilities.FormatDate(context.ResponseTime!.Value);

@@ -70,7 +70,10 @@ internal static class RulesBasedOutputCacheEntrySerializer
             }
         }
 
-        using var bufferStream = new MemoryStream();
+        // Optimization: Pre-allocate MemoryStream capacity
+        // Body length + estimated overhead for headers/tags (e.g., 4KB)
+        var estimatedSize = (int)value.Body.Length + 4096;
+        using var bufferStream = new MemoryStream(estimatedSize);
 
         Serialize(bufferStream, formatterEntry);
 

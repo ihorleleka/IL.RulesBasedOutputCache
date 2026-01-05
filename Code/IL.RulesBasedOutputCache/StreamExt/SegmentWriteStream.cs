@@ -5,8 +5,9 @@ namespace IL.RulesBasedOutputCache.StreamExt;
 internal sealed class SegmentWriteStream : Stream
 {
     private readonly List<byte[]> _segments = new();
-    private readonly MemoryStream _bufferStream = new();
     private readonly int _segmentSize;
+    private byte[] _currentBuffer;
+    private int _currentBufferIndex;
     private long _length;
     private bool _closed;
     private bool _disposed;
@@ -19,6 +20,7 @@ internal sealed class SegmentWriteStream : Stream
         }
 
         _segmentSize = segmentSize;
+        _currentBuffer = new byte[_segmentSize];
     }
 
     // Extracting the buffered segments closes the stream for writing
@@ -52,24 +54,23 @@ internal sealed class SegmentWriteStream : Stream
         }
     }
 
-    private void DisposeMemoryStream()
-    {
-        // Clean up the memory stream
-        _bufferStream.SetLength(0);
-        _bufferStream.Capacity = 0;
-        _bufferStream.Dispose();
-    }
-
     private void FinalizeSegments()
     {
-        // Append any remaining segments
-        if (_bufferStream.Length > 0)
+        // Append any remaining data in the current buffer
+        if (_currentBufferIndex > 0)
         {
-            // Add the last segment
-            _segments.Add(_bufferStream.ToArray());
+            // We need to resize the last buffer to the actual usage if it's not full
+            // But usually for segments we want them full except the last one.
+            // However, the original implementation did: _bufferStream.ToArray() which returns exact size.
+            // So we should return exact size array.
+            
+            var lastSegment = new byte[_currentBufferIndex];
+            Array.Copy(_currentBuffer, lastSegment, _currentBufferIndex);
+            _segments.Add(lastSegment);
         }
-
-        DisposeMemoryStream();
+        
+        // Help GC
+        _currentBuffer = [];
     }
 
     protected override void Dispose(bool disposing)
@@ -84,7 +85,7 @@ internal sealed class SegmentWriteStream : Stream
             if (disposing)
             {
                 _segments.Clear();
-                DisposeMemoryStream();
+                _currentBuffer = [];
             }
 
             _disposed = true;
@@ -147,17 +148,19 @@ internal sealed class SegmentWriteStream : Stream
     {
         while (!buffer.IsEmpty)
         {
-            if ((int)_bufferStream.Length == _segmentSize)
+            if (_currentBufferIndex == _segmentSize)
             {
-                _segments.Add(_bufferStream.ToArray());
-                _bufferStream.SetLength(0);
+                _segments.Add(_currentBuffer);
+                _currentBuffer = new byte[_segmentSize];
+                _currentBufferIndex = 0;
             }
 
-            var bytesWritten = Math.Min(buffer.Length, _segmentSize - (int)_bufferStream.Length);
-
-            _bufferStream.Write(buffer[..bytesWritten]);
-            buffer = buffer[bytesWritten..];
-            _length += bytesWritten;
+            var bytesToWrite = Math.Min(buffer.Length, _segmentSize - _currentBufferIndex);
+            buffer.Slice(0, bytesToWrite).CopyTo(_currentBuffer.AsSpan(_currentBufferIndex));
+            
+            _currentBufferIndex += bytesToWrite;
+            buffer = buffer.Slice(bytesToWrite);
+            _length += bytesToWrite;
         }
     }
 
@@ -180,13 +183,14 @@ internal sealed class SegmentWriteStream : Stream
             throw new ObjectDisposedException("The stream has been closed for writing.");
         }
 
-        if ((int)_bufferStream.Length == _segmentSize)
+        if (_currentBufferIndex == _segmentSize)
         {
-            _segments.Add(_bufferStream.ToArray());
-            _bufferStream.SetLength(0);
+            _segments.Add(_currentBuffer);
+            _currentBuffer = new byte[_segmentSize];
+            _currentBufferIndex = 0;
         }
 
-        _bufferStream.WriteByte(value);
+        _currentBuffer[_currentBufferIndex++] = value;
         _length++;
     }
 

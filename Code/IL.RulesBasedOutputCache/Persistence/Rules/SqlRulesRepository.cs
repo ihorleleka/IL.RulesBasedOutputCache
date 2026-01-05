@@ -11,7 +11,7 @@ internal sealed class SqlRulesRepository : DbContext, IRulesRepository
     private const string LockKey = "SqlRulesAccess";
     private const int RefreshRateInMinutes = 5;
     private static DateTime? _lastUpdated;
-    private List<CachingRule>? _cachedValues;
+    private static List<CachingRule>? _cachedValues;
 
     private DbSet<CachingRule> CachingRules { get; set; }
 
@@ -39,15 +39,19 @@ internal sealed class SqlRulesRepository : DbContext, IRulesRepository
 
     public async Task<List<CachingRule>> GetAll()
     {
-        var metadata = await CacheMetadata.AsNoTracking().FirstOrDefaultAsync();
-        if (AreCachedRulesValid(metadata))
+        if (AreCachedRulesValid(null))
         {
             return _cachedValues!;
         }
 
         using (await LockManager.GetLockAsync(LockKey))
         {
-            metadata = await CacheMetadata.AsNoTracking().FirstOrDefaultAsync();
+            if (AreCachedRulesValid(null))
+            {
+                return _cachedValues!;
+            }
+
+            var metadata = await CacheMetadata.AsNoTracking().FirstOrDefaultAsync();
             if (AreCachedRulesValid(metadata))
             {
                 return _cachedValues!;
@@ -120,7 +124,7 @@ internal sealed class SqlRulesRepository : DbContext, IRulesRepository
         }
     }
 
-    private bool AreCachedRulesValid(CacheMetadata? metadata) =>
+    private static bool AreCachedRulesValid(CacheMetadata? metadata) =>
         _cachedValues != null &&
         (_lastUpdated != null && (DateTime.UtcNow - _lastUpdated).Value.Minutes <= RefreshRateInMinutes
          ||

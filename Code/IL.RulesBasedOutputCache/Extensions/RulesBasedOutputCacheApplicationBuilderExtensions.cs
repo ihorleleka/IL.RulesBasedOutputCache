@@ -46,13 +46,15 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
         }
 
         var cacheConfig = scope.ServiceProvider.GetRequiredService<IOptions<RulesBasedOutputCacheConfiguration>>();
-        if (!rulesRepo.GetAll().Result.Any())
+        if (rulesRepo.GetAll().Result.Count != 0)
         {
-            var validationContext = new ValidationContext(rulesRepo);
-            var validRules = cacheConfig.Value.CachingRules
-                .Where(x => !x.Validate(validationContext).Any())
-                .ToList();
-            rulesRepo.AddRules(validRules).Wait();
+            return;
         }
+
+        var validationContext = new ValidationContext(rulesRepo);
+        var validRules = cacheConfig.Value.CachingRules
+            .Where(x => !x.Validate(validationContext).Any())
+            .ToList();
+        rulesRepo.AddRules(validRules).Wait();
     }
 }
