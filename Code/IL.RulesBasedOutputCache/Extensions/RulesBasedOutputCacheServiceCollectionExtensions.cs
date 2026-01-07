@@ -1,4 +1,5 @@
-﻿using IL.RulesBasedOutputCache.Persistence.Rules;
+﻿using IL.RulesBasedOutputCache.Middleware;
+using IL.RulesBasedOutputCache.Persistence.Rules;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Services;
 using IL.RulesBasedOutputCache.Settings;
@@ -17,6 +18,7 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
         Action<RulesBasedOutputCacheConfiguration>? setupOptions = null)
     {
         services.AddOutputCache();
+        services.AddScoped<RulesBasedOutputCacheMiddleware>();
         services.AddScoped<IRulesRepository, InMemoryRulesRepository>();
         var section = config.GetSection(Constants.Constants.ConfigurationSection);
         if (section.Exists())
