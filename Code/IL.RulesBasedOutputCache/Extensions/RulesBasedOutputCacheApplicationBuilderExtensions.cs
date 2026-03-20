@@ -18,8 +18,13 @@ public static class RulesBasedOutputCacheApplicationBuilderExtensions
         Action<RouteHandlerBuilder>? configureAdminPanelEndpoint = null,
         Action<RouteGroupBuilder>? configureAdminPanelApiEndpoints = null)
     {
-        InitializeDatabase(app);
         var options = app.Services.GetRequiredService<IOptions<RulesBasedOutputCacheConfiguration>>().Value;
+        if (!options.OutputCacheEnabled)
+        {
+            return app;
+        }
+
+        InitializeDatabase(app);
         if (options.AdminPanel.AdminPanelEnabled)
         {
             var adminPanelEndpoint = app.MapAdminPanelEndpoints(options);

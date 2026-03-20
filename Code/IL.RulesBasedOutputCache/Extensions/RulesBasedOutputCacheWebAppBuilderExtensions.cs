@@ -14,7 +14,7 @@ public static class RulesBasedOutputCacheWebAppBuilderExtensions
     /// <returns></returns>
     public static WebApplicationBuilder AddRulesBasedOutputCache(this WebApplicationBuilder builder, Action<RulesBasedOutputCacheConfiguration>? setupOptions = null)
     {
-        builder.Services.AddRulesBasedOutputCache(builder.Configuration);
+        builder.Services.AddRulesBasedOutputCache(builder.Configuration, setupOptions);
         return builder;
     }
 }

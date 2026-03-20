@@ -1,12 +1,15 @@
-﻿using IL.RulesBasedOutputCache.Middleware;
+﻿using System.Buffers;
+using IL.RulesBasedOutputCache.Middleware;
 using IL.RulesBasedOutputCache.Persistence.Rules;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Services;
 using IL.RulesBasedOutputCache.Settings;
 using IL.VirtualViews.Extensions;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace IL.RulesBasedOutputCache.Extensions;
 
@@ -17,63 +20,82 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
         IConfiguration config,
         Action<RulesBasedOutputCacheConfiguration>? setupOptions = null)
     {
+        var section = config.GetSection(Constants.Constants.ConfigurationSection);
+        ConfigureRulesBasedOutputCacheOptions(services, section, setupOptions);
+
+        var configuration = BuildConfiguration(section, setupOptions);
+        if (!configuration.OutputCacheEnabled)
+        {
+            services.TryAddSingleton<IOutputCacheStore, NoopOutputCacheStore>();
+            return services;
+        }
+
         services.AddOutputCache();
         services.AddScoped<RulesBasedOutputCacheMiddleware>();
         services.AddScoped<IRulesRepository, InMemoryRulesRepository>();
-        var section = config.GetSection(Constants.Constants.ConfigurationSection);
-        if (section.Exists())
+
+        if (!string.IsNullOrEmpty(configuration.SqlConnectionStringName))
         {
-            services.Configure<RulesBasedOutputCacheConfiguration>(section);
-            var rulesBasedAppInsightsConfiguration = section.Get<RulesBasedOutputCacheConfiguration>();
-            if (!string.IsNullOrEmpty(rulesBasedAppInsightsConfiguration?.SqlConnectionStringName))
-            {
-                services.AddDbContext<SqlRulesRepository>(options => options
-                    .UseSqlServer(config
-                            .GetConnectionString(rulesBasedAppInsightsConfiguration.SqlConnectionStringName),
-                        sqlServerOptions => sqlServerOptions.MigrationsHistoryTable("__RulesBasedOutputCacheMigrations")
-                    )
-                );
-                services.AddScoped<IRulesRepository, SqlRulesRepository>();
-            }
-
-            if (rulesBasedAppInsightsConfiguration is { AdminPanel.AdminPanelEnabled: false })
-            {
-                return services;
-            }
-
-            AddServicesForAdminPanelRendering(services);
-            TryConfigureRedisStore(services, config, rulesBasedAppInsightsConfiguration);
-        }
-        else
-        {
-            services.Configure(setupOptions ?? RulesBasedOutputCacheConfiguration.Default);
-            if (setupOptions == null)
-            {
-                return services;
-            }
-
-            var configuration = new RulesBasedOutputCacheConfiguration();
-            setupOptions(configuration);
-            if (configuration is { AdminPanel.AdminPanelEnabled: false })
-            {
-                return services;
-            }
-
-            AddServicesForAdminPanelRendering(services);
-            TryConfigureRedisStore(services, config, configuration);
+            services.AddDbContext<SqlRulesRepository>(options => options
+                .UseSqlServer(config
+                        .GetConnectionString(configuration.SqlConnectionStringName),
+                    sqlServerOptions => sqlServerOptions.MigrationsHistoryTable("__RulesBasedOutputCacheMigrations")
+                )
+            );
+            services.AddScoped<IRulesRepository, SqlRulesRepository>();
         }
 
+        TryConfigureRedisStore(services, config, configuration);
+
+        if (!configuration.AdminPanel.AdminPanelEnabled)
+        {
+            return services;
+        }
+
+        AddServicesForAdminPanelRendering(services);
         return services;
     }
 
-    private static void TryConfigureRedisStore(IServiceCollection services, IConfiguration config, RulesBasedOutputCacheConfiguration? rulesBasedAppInsightsConfiguration)
+    private static void ConfigureRulesBasedOutputCacheOptions(IServiceCollection services,
+        IConfigurationSection section,
+        Action<RulesBasedOutputCacheConfiguration>? setupOptions)
     {
-        if (!string.IsNullOrEmpty(rulesBasedAppInsightsConfiguration?.RedisConnectionStringName))
+        if (section.Exists())
+        {
+            services.Configure<RulesBasedOutputCacheConfiguration>(section);
+        }
+        else
+        {
+            services.Configure(RulesBasedOutputCacheConfiguration.Default);
+        }
+
+        if (setupOptions != null)
+        {
+            services.PostConfigure(setupOptions);
+        }
+    }
+
+    private static RulesBasedOutputCacheConfiguration BuildConfiguration(IConfigurationSection section,
+        Action<RulesBasedOutputCacheConfiguration>? setupOptions)
+    {
+        var configuration = section.Exists()
+            ? section.Get<RulesBasedOutputCacheConfiguration>() ?? new RulesBasedOutputCacheConfiguration()
+            : new RulesBasedOutputCacheConfiguration();
+
+        setupOptions?.Invoke(configuration);
+        return configuration;
+    }
+
+    private static void TryConfigureRedisStore(IServiceCollection services,
+        IConfiguration config,
+        RulesBasedOutputCacheConfiguration configuration)
+    {
+        if (!string.IsNullOrEmpty(configuration.RedisConnectionStringName))
         {
             services.AddStackExchangeRedisOutputCache(options =>
             {
-                options.Configuration = config.GetConnectionString(rulesBasedAppInsightsConfiguration.RedisConnectionStringName);
-                options.InstanceName = rulesBasedAppInsightsConfiguration.RedisInstanceName;
+                options.Configuration = config.GetConnectionString(configuration.RedisConnectionStringName);
+                options.InstanceName = configuration.RedisInstanceName;
             });
         }
     }
@@ -84,5 +106,28 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
         services.AddControllersWithViews().AddRazorRuntimeCompilation();
         services.AddHttpContextAccessor();
         services.AddSingleton<IViewRenderService, ViewRenderService>();
+    }
+
+    private sealed class NoopOutputCacheStore : IOutputCacheStore
+    {
+        public ValueTask<byte[]?> GetAsync(string key, CancellationToken cancellationToken) =>
+            ValueTask.FromResult<byte[]?>(null);
+
+        public ValueTask SetAsync(string key,
+            byte[] value,
+            string[]? tags,
+            TimeSpan validFor,
+            CancellationToken cancellationToken) =>
+            ValueTask.CompletedTask;
+
+        public ValueTask SetAsync(string key,
+            ReadOnlySequence<byte> value,
+            ReadOnlyMemory<string> tags,
+            TimeSpan validFor,
+            CancellationToken cancellationToken) =>
+            ValueTask.CompletedTask;
+
+        public ValueTask EvictByTagAsync(string tag, CancellationToken cancellationToken) =>
+            ValueTask.CompletedTask;
     }
 }

@@ -7,7 +7,10 @@
 ## v5 startup files structure (Program.cs and Startup.cs files)
 ```
 ConfigureServices(IServiceCollection services)
-services.AddRulesBasedOutputCache();
+services.AddRulesBasedOutputCache(Configuration, options =>
+{
+    options.OutputCacheEnabled = true;
+});
 
 ...
 
@@ -18,7 +21,10 @@ app.UseRulesBasedOutputCache();
 
 ```
 var builder = WebApplication.CreateBuilder(args);
-builder.AddRulesBasedOutputCache();
+builder.AddRulesBasedOutputCache(options =>
+{
+    options.OutputCacheEnabled = true;
+});
 
 ...
 var app = builder.Build();
@@ -48,11 +54,13 @@ await _store.EvictByTagAsync("CacheTag", HttpContext.RequestAborted);
 
 `.AddRulesBasedOutputCache()` has optional parameter for inline service configuration.
 
+Library stays disabled unless it is explicitly enabled either in `appsettings.json` or via inline options configuration. When disabled, the library does not register ASP.NET output cache services or middleware, and only a noop `IOutputCacheStore` is added so dependent code can still resolve that interface.
+
 Another invariant is providing configuration from `appsettings.json` file.
 Library comes with [schema file](https://github.com/lelekaihor/IL.RulesBasedOutputCache/blob/main/Code/appsettings.outputcache.schema.json), that you will be able to select as schema in your own `appsettings.json` file.
 
 ### Configuration parameters:
-- **OutputCacheEnabled** - allows to disable module completely
+- **OutputCacheEnabled** - enables the module. If omitted or set to `false`, the library stays inactive.
 - **DefaultCacheTimeout** - default expiration time for your cache entries, if not set up on the rule itself
 - **CachingRules** - array of caching rules the system will have on application startup
 - **SqlConnectionStringName** - optional string parameter, if provided will replace in-memory storage for rules with SQL based. You need to provide only the NAME of connection string, not the connection string itself. Database and/or required table will br created automatically, all the needed migrations will be automatically applied with new versions of library.
