@@ -54,7 +54,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="IL.VirtualViews" Version="1.9.2.1" />
+    <PackageReference Include="IL.VirtualViews" Version="1.9.2.2" />
   </ItemGroup>
 
   <ItemGroup>

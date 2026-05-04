@@ -101,11 +101,7 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
 
     private static void AddServicesForAdminPanelRendering(IServiceCollection services)
     {
-        services.AddVirtualViewsCapabilities(
-#if DEBUG
-            options => options.EnableDebugPhysicalFiles = true
-#endif
-        );
+        services.AddVirtualViewsCapabilities("*");
         services.AddControllersWithViews().AddRazorRuntimeCompilation();
         services.AddHttpContextAccessor();
         services.AddSingleton<IViewRenderService, ViewRenderService>();
