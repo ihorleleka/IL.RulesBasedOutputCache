@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using IL.RulesBasedOutputCache.Middleware;
+﻿using IL.RulesBasedOutputCache.Middleware;
 using IL.RulesBasedOutputCache.Persistence.Rules;
 using IL.RulesBasedOutputCache.Persistence.Rules.Interfaces;
 using IL.RulesBasedOutputCache.Services;
@@ -102,7 +101,11 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
 
     private static void AddServicesForAdminPanelRendering(IServiceCollection services)
     {
-        services.AddVirtualViewsCapabilities();
+        services.AddVirtualViewsCapabilities(
+#if DEBUG
+            options => options.EnableDebugPhysicalFiles = true
+#endif
+        );
         services.AddControllersWithViews().AddRazorRuntimeCompilation();
         services.AddHttpContextAccessor();
         services.AddSingleton<IViewRenderService, ViewRenderService>();
@@ -116,13 +119,6 @@ public static class RulesBasedOutputCacheServiceCollectionExtensions
         public ValueTask SetAsync(string key,
             byte[] value,
             string[]? tags,
-            TimeSpan validFor,
-            CancellationToken cancellationToken) =>
-            ValueTask.CompletedTask;
-
-        public ValueTask SetAsync(string key,
-            ReadOnlySequence<byte> value,
-            ReadOnlyMemory<string> tags,
             TimeSpan validFor,
             CancellationToken cancellationToken) =>
             ValueTask.CompletedTask;
